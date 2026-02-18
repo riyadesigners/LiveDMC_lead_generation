@@ -1,0 +1,926 @@
+const express = require('express');
+const cors = require ('cors');
+const path = require ("path");
+// const mysql = require('mysql2/promise');
+ 
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.use("/images", express.static("images"));
+
+app.use("/riya_institute", require("./routes/auth.routes"));
+app.use("/riya_institute", require("./routes/lead.routes"));
+app.use("/riya_institute", require("./routes/student.routes"));
+
+const PORT = process.env.PORT || 8081;
+app.listen(PORT, ()=> console.log(`Server running on ${PORT}`));
+
+app.use(express.static(path.join(__dirname, "login-signup/build")));
+app.get("*", (req, res) =>
+  res.sendFile(path.join(__dirname, "login-signup/build/index.html"))
+);
+// const allowOrigins = [
+//   'http://localhost:3000',
+//   'http://localhost:3001',
+//   'http://localhost:8081'
+// ];
+
+
+
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin) return callback(null, true);
+//     if (allowOrigins.indexOf(origin) !== -1) return callback(null, true);
+//     return callback(new Error('Not allowed by CORS'));
+//   },
+//   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+//   allowedHeaders: ['Content-Type'],
+//   credentials: true,
+// }));
+
+
+
+// const pool = mysql.createPool({  
+//   host: 'localhost',
+//   user: 'root',
+//   password: '',
+//   database: 'riya_institute',
+//     waitForConnections: true,
+//     connectionLimit: 10,
+//     queueLimit: 0
+// });
+
+// const generateStudentId = async (req, res, next) => {
+//   const conn = await pool.getConnection();
+//   try {
+//     const [last] = await conn.query(
+//       "SELECT max(id) FROM students_details ORDER BY id DESC LIMIT 1"
+//     );
+//     const nextId = last.length ? last[0].id + 1 : 1;
+//     req.studentCode = `RIH${String(nextId).padStart(3, "0")}`;
+//     next();
+//   } catch (err) {
+//     next(err);
+//   } finally {
+//     conn.release();
+//   }
+// };
+
+// const multer = require("multer");
+// const fs = require("fs");
+//      const path = require('path');  
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     const dir = "images/pic";
+//     if (!fs.existsSync(dir)) {
+//       fs.mkdirSync(dir, { recursive: true });
+//     }
+//     cb(null, dir);
+//   },
+//   filename: (req, file, cb) => {
+//     const studentId = req.studentCode || "TEMP";
+//     const ext = path.extname(file.originalname);
+//     const base = file.fieldname;
+
+//     const uniqueName = `${studentId}_${base}_${Date.now()}${ext}`
+//     ;
+//     cb(null, uniqueName);
+//   }
+// });
+// const upload = multer({ storage }).any();
+    
+
+// login page code starts here
+// app.post('/riya_institute/login', async (req, res) => {
+// const { email, password } = req.body || {};
+// if(!email || !password){
+//     return res.status(400).json({error: 'email and passwod are required'});
+// }
+// try{
+//     console.log('login attempt', {email});
+//     const sql = 'SELECT user_id, username, email_id, password FROM user_auth WHERE email_id = ? LIMIT 1';
+//     const [rows] = await pool.execute(sql, [email]);
+//     if(!rows || rows.length === 0){
+//         return res.status(401).json({error: 'Invalid email or password'});
+//     }
+//     const user = rows[0];
+//     if(user.password !== password){
+//         return res.status(401).json({error: 'Invalid email or password'});
+//     }
+//     return res.json({message: 'Login successful', userID: user.user_id, username: user.username, email: user.email_id});
+// }
+// catch(err){ 
+//     console.error('Error during login:', err);
+//     return res.status(500).json({error: 'Internal server error', details:err.message});
+//   }
+// });
+    
+// Add lead code starts here
+// app.post('/riya_institute/addLead',  async (req, res) => {
+//   try {
+//     const data = req.body;
+
+//     if(!data.contactNumber || !data.enquiryFName){
+//       return  res.status(400).json({ error: 'Contact Number and First Name are required' });
+//     }
+//     const sqlleadinsert = `INSERT INTO leads  (enquiryFName, enquiryLName, contactNumber, email, branch, leadLocation, 
+//        courseInterested, leadOwner, enquiryDate, leadSource, callDate, nextFollowUp,
+//        leadStage, leadStatus, leadRemark, remarks, ownerFeedback)
+//       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//     `;
+
+//     const params = [
+//       data.enquiryFName,
+//       data.enquiryLName,
+//       data.contactNumber,
+//       data.email,
+//       data.branch,
+//       data.leadLocation,
+//       data.courseInterested,
+//       data.leadOwner,
+//       data.enquiryDate,
+//       data.leadSource,
+//       data.callDate,
+//       data.nextFollowUp,
+//       data.leadStage,
+//       data.leadStatus,
+//       data.leadRemark,
+//       data.remarks,
+//       data.ownerFeedback
+//     ];
+//     const [result] = await pool.execute(sqlleadinsert, params);
+//     res.status(201).json({
+//       message: 'Lead added successfully',
+//       leadId: result.insertId,
+//     })
+//     // await.pool.execute(sqlleadinsert, params);
+    
+//   }
+//   catch (err) {
+//     console.errord('Error adding lead:', err);
+//     res.status(500).json({ error: 'Internal server error', details: err.message });
+//   }
+// });
+
+
+//view leads from database code start here
+// app.get('/riya_institute/leads', async (req, res) => {
+//   try {
+//     const page = Number(req.query.page) || 1;
+//     const limit = Number(req.query.limit) || 10;
+//     const offset = (page - 1) * limit;
+
+//     const [countRows] = await pool.query(
+//       'SELECT COUNT(*) AS total FROM leads'
+//     );
+
+//     const totalRecords = countRows[0].total;
+//     const totalPages = Math.ceil(totalRecords / limit);
+
+//     const [rows] = await pool.query(`
+//       SELECT 
+//         id,
+//         enquiryFName,
+//         enquiryLName,
+//         contactNumber,
+//         email,
+//         branch,
+//         courseInterested,
+//         leadStage,
+//         leadOwner,
+//         leadStatus
+//       FROM leads
+//       ORDER BY id DESC
+//       LIMIT ${limit} OFFSET ${offset}
+//     `);
+
+//     res.json({
+//       data: rows,
+//       pagination: {
+//         page,
+//         limit,
+//         totalPages,
+//         totalRecords
+//       }
+//     });
+//   } catch (err) {
+//     console.error('Error fetching leads:', err);
+//     res.status(500).json({ error: 'Failed to fetch leads' });
+//   }
+// });
+
+// Get single lead by ID
+app.get('/riya_institute/lead/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM leads WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Fetch lead error:', err);
+    res.status(500).json({ error: 'Failed to fetch lead' });
+  }
+});
+
+//Update the respective Lead to db
+app.put('/riya_institute/updateLead/:id', async (req, res) => {
+  try{
+    const leadId = req.params.id;
+    const updatedData = req.body;
+    const sqlUpdate = `
+      UPDATE leads SET
+        enquiryFName = ?,
+        enquiryLName = ?,
+        contactNumber = ?,
+        email = ?,
+        branch = ?,
+        leadLocation = ?,
+        courseInterested = ?,
+        leadOwner = ?,
+        enquiryDate = ?,
+        leadSource = ?,
+        callDate = ?,
+        nextFollowUp = ?,
+        leadStage = ?,
+        leadStatus = ?,
+        leadRemark = ?,
+        remarks = ?,
+        ownerFeedback = ?
+      WHERE id = ?
+    `;
+    const params = [
+     updatedData.enquiryFName || null,
+    updatedData.enquiryLName || null,
+    updatedData.contactNumber || null,
+    updatedData.email || null,
+    updatedData.branch || null,
+    updatedData.leadLocation || null,
+    updatedData.courseInterested || null,
+    updatedData.leadOwner || null,
+    updatedData.enquiryDate || null,
+    updatedData.leadSource || null,
+    updatedData.callDate || null,
+    updatedData.nextFollowUp || null,
+    updatedData.leadStage || null,
+    updatedData.leadStatus || null,
+    updatedData.leadRemark || null,
+    updatedData.remarks || null,
+    updatedData.ownerFeedback || null,
+    leadId
+    ];
+    await pool.execute(sqlUpdate, params);
+    res.json({ message: 'Lead updated successfully'});
+  }
+  catch(err){
+    console.error('Error updating lead:', err);
+    res.status(500).json({ error: 'Failed to update lead' });
+  }
+});
+
+// view ACTIVE leads only
+app.get('/riya_institute/leads1', async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // count ONLY active leads
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total FROM leads WHERE leadStatus = 'Active'`
+    );
+
+    const totalRecords = countRows[0].total;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    // fetch ONLY active leads
+    const [rows] = await pool.query(`
+      SELECT 
+        id,
+        enquiryFName,
+        enquiryLName,
+        contactNumber,
+        email,
+        branch,
+        courseInterested,
+        leadStage,
+        leadOwner,
+        leadStatus
+      FROM leads
+      WHERE leadStatus = 'Active'
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    res.json({
+      data: rows,
+      pagination: {
+        page,
+        limit,
+        totalPages,
+        totalRecords
+      }
+    });
+
+  } catch (err) {
+    console.error('Error fetching active leads:', err);
+    res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
+
+    const getValidDueDate = (year, month, day) => {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDay));
+};
+
+const getFile = (files, field) =>
+  files?.find(f => f.fieldname === field) || null;
+// Add Student 
+app.post('/riya_institute/addStudent',  generateStudentId, upload, async (req,res) => {
+
+     
+  const conn = await pool.getConnection();
+  const studentCode = req.studentCode;
+  try{
+    await conn.beginTransaction();
+  
+    const parsed = JSON.parse(req.body.data);
+    const { personal, family, academics, payment } = parsed;
+    
+const photoFile = getFile(req.files, "photo");
+const addressProofFile = getFile(req.files, "addressProof");
+
+
+    
+
+    
+    
+    //insert student details
+    const [studentResult] = await conn.query(
+      `INSERT INTO students_details (
+        student_id, first_name, middle_name, last_name,
+        mobile, alternate_mobile, email, dob, gender,
+        blood_group, branch, course_interested,
+        registration_date, nationality,
+        address_line1, address_line2, city, state, pincode,
+        father_name, father_mobile, father_occupation,
+        mother_name, mother_mobile, mother_occupation,
+        photo_path, photo_name,
+        address_proof_path, address_proof_name
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       [
+          studentCode,
+          personal.firstName,
+          personal.middleName,
+          personal.lastName,
+          personal.mobile,
+          personal.alternateMobile,
+          personal.email,
+          personal.dob,
+          personal.gender,
+          personal.bloodGroup,
+          personal.branch,
+          personal.courseInterested,
+          personal.registrationDate,
+          personal.nationality,
+          personal.addressLine1,
+          personal.addressLine2,
+          personal.city,
+          personal.state,
+          personal.pincode,
+          family.fatherName,
+          family.fatherMobile,
+          family.fatherOccupation,
+          family.motherName,
+          family.motherMobile,
+          family.motherOccupation,
+          photoFile?.path || null,    
+          photoFile?.filename || null,  
+          addressProofFile?.path || null,  
+          addressProofFile?.filename || null 
+]
+    );
+    const studentDbId = studentResult.insertId;
+    //insert academic details
+    for (let i = 0; i < academics.length; i++) {
+  const marksheet = getFile(req.files, `marksheet_${i}`);
+
+  await conn.query(
+    `INSERT INTO student_academics
+     (student_id, level, institute, passing_year, board_university, percentage,
+      marksheet_path, marksheet_name)
+     VALUES (?,?,?,?,?,?,?,?)`,
+    [
+      studentCode,
+      academics[i].level,
+      academics[i].institute,
+      academics[i].passing_year,
+      academics[i].board_university,
+      academics[i].percentage,
+      marksheet?.path || null,
+      marksheet?.filename || null
+    ]
+  );
+}
+    //insert payment details
+    const installmentDay = payment.installmentDay ? parseInt(payment.installmentDay, 10): null;
+
+
+    await conn.query(
+  `INSERT INTO student_payments
+   (student_id, total_course_fee, payment_mode, payment_option, regamount, discount_amt, installment_day, remarks)
+   VALUES (?,?,?,?,?,?,?,?)`,
+  [
+    studentCode,
+    payment.totalFee,
+    payment.paymentMode,
+    payment.paymentOption,
+    payment.regamount, 
+    payment.discount_amt,       
+   installmentDay,
+    payment.remarks || null
+  ]
+);
+    //  
+
+     if(payment.regamount && Number(payment.regamount) > 0){
+      await conn.query(
+        `Insert into student_payment_transactions (student_id, amount, transaction_date, payment_mode, remarks) VALUES (?,?,?,CURDATE(),?)`,
+        [
+          studentCode,
+          payment.regamount,
+          payment.paymentMode,
+          payment.remarks || null
+        ]
+      );
+     }
+    //Emi Generate response
+    // ===== EMI GENERATION =====
+let emimonths = 1;
+if (payment.paymentOption !== "Full Payment") {
+  emimonths = parseInt(payment.paymentOption, 10);
+}
+
+const totalFee = Number(payment.totalFee);
+const regamount = Number(payment.regamount || 0);
+const discount = Number(payment.discount_amt || 0);
+const newinstallmentDay = Number(payment.installmentDay);
+
+const emiBase = totalFee - (regamount + discount);
+const emiAmount = Math.round(emiBase / emimonths);
+
+// Start from NEXT month of registration
+const regDate = new Date(personal.registrationDate);
+let year = regDate.getFullYear();
+let duemonth = regDate.getMonth() + 1; // next month
+
+for (let i = 1; i <= emimonths; i++) {
+  const dueDate = getValidDueDate(year, duemonth, newinstallmentDay);
+  const isFullpaid = payment.paymentOption === "Full Payment";
+
+  const [instResult] = await conn.query(
+    `INSERT INTO student_payment_installments
+     (student_id, installment_no, due_date, amount, paid_amount, bal_amount, status)
+     VALUES (?,?,?,?,?,?,?)`,
+    [
+      studentCode,
+      i,
+      dueDate,
+      emiAmount,
+      isFullpaid ? emiAmount : 0,
+      isFullpaid ? 0 : emiAmount,
+      isFullpaid ? "PAID" : "PENDING"
+    ]
+  );
+
+  if (isFullpaid) {
+    await conn.query(
+      `INSERT INTO student_payment_ledger
+       (student_id, installment_id, paid_amount, payment_mode, payment_date, remarks)
+       VALUES (?,?,?,?,CURDATE(),?)`,
+      [
+        studentCode,
+        instResult.insertId,
+        emiAmount,
+        payment.paymentMode,
+        "Full Payment"
+      ]
+    );
+  }
+
+  duemonth++; 
+  if (duemonth > 11) {
+    duemonth = 0;
+    year++;
+  }
+}
+
+await conn.commit();
+    res.status(201).json({
+      message: 'Student added successfully',
+      studentId: studentCode
+    }); 
+  }
+  catch (err) {
+  await conn.rollback();
+  console.error("Add student error:", err);
+  res.status(500).json({
+    error: "Failed to add student",
+    details: err.message
+  });
+}
+  finally {
+    conn.release();
+  }
+});
+
+app.use('/images', express.static('images'));
+app.get('/riya_institute/students', async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // total count
+    const [countRows] = await pool.query(
+      'SELECT COUNT(*) AS total FROM students_details'
+    );
+
+    const totalRecords = countRows[0].total;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    // fetch students
+    const [rows] = await pool.query(
+      `SELECT 
+        id,
+        student_id,
+        first_name,
+        middle_name,
+        last_name,
+        mobile,
+        email,
+        branch,
+        course_interested,
+         DATE_FORMAT(registration_date, '%d-%m-%Y') AS registration_date,
+        photo_name
+      FROM students_details
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+
+    res.json({
+      data: rows,
+      pagination: {
+        page,
+        limit,
+        totalPages,
+        totalRecords
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching students:', err);
+    res.status(500).json({ error: 'Failed to fetch students' });
+  }
+});
+
+// Get full student details by student_id
+// Get full student details (Edit)
+app.get("/riya_institute/student/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const [student] = await pool.query(
+      "SELECT * FROM students_details WHERE student_id = ?",
+      [studentId]
+    );
+
+    if (student.length === 0) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    const [academics] = await pool.query(
+      `SELECT 
+        level,
+        institute,
+        passing_year AS year,
+        board_university AS board,
+        percentage
+      FROM student_academics
+      WHERE student_id = ?`,
+      [studentId]
+    );
+
+    const [payment] = await pool.query(
+      `SELECT 
+        total_course_fee AS totalFee,
+        payment_mode AS paymentMode,
+        payment_option AS paymentOption,
+        regamount AS regamount,
+        discount_amt AS discount_amt,
+        installment_day AS installmentDay,
+        remarks
+      FROM student_payments
+      WHERE student_id = ?`,
+      [studentId]
+    );
+
+    res.json({
+      personal: student[0],
+      academics,
+      payment: payment[0] || {},
+    });
+  } catch (err) {
+    console.error("Fetch student error:", err);
+    res.status(500).json({ error: "Failed to fetch student" });
+  }
+});
+
+const attachStudentId = (req, res, next) => {
+  req.studentCode = req.params.studentId;  
+  next();
+};
+// Update student (Edit)
+app.put(
+  "/riya_institute/updateStudent/:studentId",
+  attachStudentId,
+  upload,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+
+    try {
+      await conn.beginTransaction();
+
+      const { studentId } = req.params;
+      const parsed = JSON.parse(req.body.data);
+      const { personal, family, academics, payment } = parsed;
+
+      // ================= FILE HANDLING =================
+      const photoFile = getFile(req.files, "photo");
+      const addressProofFile = getFile(req.files, "addressProof");
+
+      let fileSql = "";
+      let fileParams = [];
+
+      if (photoFile) {
+        fileSql += ", photo_path = ?, photo_name = ?";
+        fileParams.push(photoFile.path, photoFile.filename);
+      }
+
+      if (addressProofFile) {
+        fileSql += ", address_proof_path = ?, address_proof_name = ?";
+        fileParams.push(addressProofFile.path, addressProofFile.filename);
+      }
+
+      // ================= UPDATE STUDENT =================
+      await conn.query(
+        `UPDATE students_details SET
+          first_name = ?, middle_name = ?, last_name = ?,
+          mobile = ?, alternate_mobile = ?, email = ?, dob = ?, gender = ?,
+          blood_group = ?, branch = ?, course_interested = ?,
+          registration_date = ?, nationality = ?,
+          address_line1 = ?, address_line2 = ?, city = ?, state = ?, pincode = ?,
+          father_name = ?, father_mobile = ?, father_occupation = ?,
+          mother_name = ?, mother_mobile = ?, mother_occupation = ?
+          ${fileSql}
+         WHERE student_id = ?`,
+        [
+          personal.firstName,
+          personal.middleName,
+          personal.lastName,
+          personal.mobile,
+          personal.alternateMobile,
+          personal.email,
+          personal.dob,
+          personal.gender,
+          personal.bloodGroup,
+          personal.branch,
+          personal.courseInterested,
+          personal.registrationDate,
+          personal.nationality,
+          personal.addressLine1,
+          personal.addressLine2,
+          personal.city,
+          personal.state,
+          personal.pincode,
+          family.fatherName,
+          family.fatherMobile,
+          family.fatherOccupation,
+          family.motherName,
+          family.motherMobile,
+          family.motherOccupation,
+          ...fileParams,
+          studentId,
+        ]
+      );
+
+      // ================= RESET ACADEMICS =================
+      await conn.query(
+        "DELETE FROM student_academics WHERE student_id = ?",
+        [studentId]
+      );
+
+      for (let i = 0; i < academics.length; i++) {
+        const marksheet = getFile(req.files, `marksheet_${i}`);
+
+        await conn.query(
+          `INSERT INTO student_academics
+           (student_id, level, institute, passing_year, board_university, percentage,
+            marksheet_path, marksheet_name)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          [
+            studentId,
+            academics[i].level,
+            academics[i].institute,
+            academics[i].passing_year,
+            academics[i].board_university,
+            academics[i].percentage,
+            marksheet?.path || null,
+            marksheet?.filename || null,
+          ]
+        );
+      }
+
+      // ================= UPDATE PAYMENT =================
+      const installmentDay = payment.installmentDay
+        ? parseInt(payment.installmentDay, 10)
+        : null;
+
+      await conn.query(
+        `UPDATE student_payments SET
+          total_course_fee = ?,
+          payment_mode = ?,
+          payment_option = ?,
+          regamount = ?,
+          discount_amt = ?,
+          installment_day = ?,
+          remarks = ?
+         WHERE student_id = ?`,
+        [
+          payment.totalFee,
+          payment.paymentMode,
+          payment.paymentOption,
+          payment.regamount,
+          payment.discount_amt,
+          installmentDay,
+          payment.remarks,
+          studentId,
+        ]
+      );
+
+      await conn.commit();
+      res.json({ message: "Student updated successfully" });
+
+    } catch (err) {
+      await conn.rollback();
+      console.error("Update student error:", err);
+      res.status(500).json({ error: "Failed to update student" });
+    } finally {
+      conn.release();
+    }
+  }
+);
+
+
+//get Student payment history
+// GET installments by student
+app.get("/riya_institute/student/:studentId/installments", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    //studdent basic info
+    const[[student]] =await pool.query(
+       `SELECT 
+         s.student_id,
+         CONCAT(s.first_name,' ',s.last_name) AS name,
+         s.course_interested AS course,
+         CONCAT('/images/pic/', s.photo_name) AS photo
+       FROM students_details s
+       WHERE s.student_id = ?`,
+      [studentId]
+    )
+
+     if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    const [[payment]] = await pool.query(
+      `SELECT total_course_fee
+       FROM student_payments
+       WHERE student_id = ?`,
+      [studentId]
+    );
+    //total emi paid
+    const [[paid]] = await pool.query(
+          `SELECT IFNULL(SUM(paid_amount),0) AS totalPaid
+          FROM student_payment_ledger
+          WHERE student_id = ?`,
+          [studentId]
+        );
+    const [installments] = await pool.query(
+      `SELECT 
+         i.id,
+         i.installment_no,
+         DATE_FORMAT(i.due_date, '%d-%m-%Y') AS due_date,
+         i.amount,
+         i.paid_amount,
+         i.bal_amount,
+         i.status,
+
+         DATE_FORMAT(l.payment_date, '%d-%m-%y') As payment_date,
+         l.remarks AS payment_remarks
+        
+       FROM student_payment_installments i
+       LEFT JOIN student_payment_ledger l
+       ON l.installment_id = i.id 
+
+       WHERE i.student_id = ?
+       ORDER BY i.installment_no`,
+      [studentId]
+    );
+    const totalCourseFee = Number(payment?.total_course_fee);
+    const totalPaid = Number(paid?.totalPaid || 0);
+
+    res.json({
+        student,
+        paymentSummary: {
+        totalCourseFee,
+        totalPaid,
+        balanceAmount: totalCourseFee - totalPaid
+      },
+      installments
+  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch installments" });
+  }
+});
+
+// PAY EMI
+app.post("/riya_institute/student/pay-emi", async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const { installmentId, studentId, amount, paymentMode, remarks } = req.body;
+
+    await conn.beginTransaction();
+
+    // update installment
+    await conn.query(
+      `UPDATE student_payment_installments
+       SET paid_amount = amount,
+           bal_amount = 0,
+           status = 'PAID'
+       WHERE id = ?`,
+      [installmentId]
+    );
+
+    // insert ledger
+    await conn.query(
+      `INSERT INTO student_payment_ledger
+       (student_id, installment_id, paid_amount, payment_mode, payment_date, remarks)
+       VALUES (?,?,?,?,CURDATE(),?)`,
+      [studentId, installmentId, amount, paymentMode, remarks]
+    );
+
+    await conn.commit();
+    res.json({ message: "EMI paid successfully" });
+  } catch (err) {
+    await conn.rollback();
+    console.error(err);
+    res.status(500).json({ error: "EMI payment failed" });
+  } finally {
+    conn.release();
+  }
+});
+
+
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err && err.stack ? err.stack : err);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ error: 'Internal server error' });
+});
+
+// const PORT = process.env.PORT || 8081;
+// app.listen(PORT, () => {
+//     console.log(`listening on ${PORT}`);
+// });
+
+
+
+// const { error } = require('console');
+
+// app.use(express.static(path.join(__dirname, 'login-signup', 'build')));
+
+// // React wildcard fallback (Express v5 safe)
+// app.use((req, res) => {
+//   res.sendFile(path.join(__dirname, 'login-signup', 'build', 'index.html'));
+// });
+
+
+
+ 

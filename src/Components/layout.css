@@ -1,0 +1,597 @@
+/* layout.css */
+.app-layout { font-family: poppins; height: 100vh; display:flex; flex-direction:column; }
+.topbar { height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:#ffffff; border-bottom:1px solid #e6e6e6; }
+.layout-body { display:flex; flex:1; min-height:0; } /* important for scroll */
+
+.layout-main { flex:1; padding:20px; background:#f7fafc; overflow:auto; display:flex; flex-direction:column; }
+.footer { margin-top: auto; padding:12px 0; text-align:center; color:#6b7280; font-size:14px; }
+.topbar__actions span{
+    padding: 0 5px;
+}
+body{
+    margin: 0;
+    padding: 0;
+    font-size: 14px !important;
+}
+.topbar {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* LEFT */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar-toggle {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #333;
+}
+
+.topbar-toggle:hover {
+  color: #007bff;
+}
+
+.topbar-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+}
+
+/* RIGHT */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ICON BUTTON */
+.icon-btn {
+  position: relative;
+  background: #f5f6f8;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #555;
+}
+
+.icon-btn:hover {
+  background: #e9ecef;
+}
+
+/* Notification dot */
+.notification-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: #ff3b3b;
+  border-radius: 50%;
+}
+
+/* USER */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* LOGOUT */
+.logout-btn {
+  background: #fff;
+  border: 1px solid #ffdddd;
+  color: #dc3545;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 55px;
+  right: 90px;
+  width: 260px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  padding: 10px;
+}
+
+.notification-dropdown h6 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-dropdown li {
+  padding: 8px;
+  font-size: 13px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.view-all-btn {
+  width: 100%;
+  border: none;
+  background: #0d6efd;
+  color: #fff;
+  padding: 6px;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+}
+
+
+/* Sidebar Start */
+.sidebar {
+      width: 220px;
+    background: #DAECF5;
+    color: #4C92A9;
+    padding: 12px;
+    transition: width 0.25s ease;
+
+}
+
+.sidebar--collapsed {
+  width: 64px;
+}
+
+/* Main links */
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  color: #4C92A9;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sidebar__link:hover {
+  background:#f9fdff;
+  color: #2aadee;
+}
+
+.sidebar__link.active {
+  background:#f9fdff;
+  color: #2aadee;
+}
+
+/* Icons */
+.sidebar .icon {
+  font-size: 18px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Parent menu (Course Management) */
+.sidebar__link--parent {
+  justify-content: space-between;
+}
+
+/* Arrow */
+.arrow {
+  margin-left: auto;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+.arrow.open {
+  transform: rotate(90deg);
+}
+
+/* ===========================
+   SUBMENU
+=========================== */
+
+.sidebar__submenu {
+  background: #1f2a44;
+  border-radius: 8px;
+  margin: 4px 0 8px 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.sidebar__submenu.show {
+  max-height: 300px;
+}
+
+.sidebar__sublink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 20px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.sidebar__sublink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar__sublink.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.sidebar__sublink i {
+  font-size: 6px;
+}
+
+/* ===========================
+   COLLAPSED MODE
+=========================== */
+
+.sidebar--collapsed .label {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar__link {
+  justify-content: center;
+  gap: 0;
+  padding: 12px 0;
+}
+
+.sidebar--collapsed .sidebar__submenu {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar__link.active {
+  border-radius: 10px;
+}
+
+/* Tooltip */
+.sidebar--collapsed .sidebar__link {
+  position: relative;
+}
+
+.sidebar--collapsed .sidebar__link:hover::after {
+  content: attr(data-title);
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  /* background: #111827; */
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 999;
+}
+/* ===============================
+   COLLAPSED SIDEBAR – FLYOUT MENU
+================================ */
+
+/* Allow overflow for floating submenu */
+.sidebar--collapsed {
+  overflow: visible;
+}
+
+/* Parent must be relative */
+.sidebar--collapsed .sidebar__link--parent {
+  position: relative;
+}
+
+/* Floating submenu */
+.sidebar--collapsed .sidebar__submenu {
+  position: absolute;
+  top: 0;
+  left: 64px; /* sidebar collapsed width */
+  min-width: 200px;
+  background: #1f2a44;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+  display: none;
+  max-height: none;
+  z-index: 1000;
+}
+
+ 
+/* Submenu items spacing */
+.sidebar--collapsed .sidebar__sublink {
+  padding: 8px 12px;
+  margin: 4px 0;
+  white-space: nowrap;
+}
+
+/* Hide arrow in collapsed mode */
+.sidebar--collapsed .arrow {
+  display: none;
+}
+ 
+
+/* Allow submenu to escape sidebar */
+.sidebar--collapsed {
+  overflow: visible;
+}
+
+/* Parent positioning */
+.sidebar--collapsed .sidebar__link--parent {
+  position: relative;
+}
+
+/* Default hidden */
+.sidebar--collapsed .sidebar__submenu {
+  display: none;
+}
+
+/* Visible when React adds .show */
+.sidebar--collapsed .sidebar__submenu.show {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 64px;
+  min-width: 210px;
+  background: #1f2a44;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+
+/* Submenu items */
+.sidebar--collapsed .sidebar__sublink {
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+/* Hide arrow when collapsed */
+.sidebar--collapsed .arrow {
+  display: none;
+}
+
+/* Wrapper for correct positioning */
+.sidebar__menu-item {
+  position: relative;
+}
+
+/* COLLAPSED MODE – CLICK FLYOUT */
+.sidebar--collapsed {
+  overflow: visible;
+}
+
+/* Hide submenu by default */
+.sidebar--collapsed .sidebar__submenu {
+  display: none;
+}
+
+/* Show submenu when openMenu matches */
+.sidebar--collapsed .sidebar__submenu.show {
+  display: block;
+  position: absolute;
+  top: 0;                 /* aligns with clicked item */
+  left: 64px;             /* collapsed sidebar width */
+  min-width: 220px;
+  background: #1f2a44;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+  z-index: 2000;
+}
+
+/* Submenu items */
+.sidebar--collapsed .sidebar__sublink {
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+/* Hide arrow in collapsed */
+.sidebar--collapsed .arrow {
+  display: none;
+}
+
+
+/* FILTERS */
+.lead-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #eef2f7;
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter-pill span {
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.filter-pill.active {
+  background: #e6f0ff;
+  color: #1d4ed8;
+}
+
+/* CARD */
+.lead-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+/* TABLE */
+.lead-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lead-table thead {
+  background: #f8fafc;
+}
+
+.lead-table th {
+  padding: 14px;
+  font-size: 13px;
+  text-align: left;
+  color: #555;
+}
+
+.lead-table td {
+  padding: 14px;
+  font-size: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+.lead-table tbody tr:hover {
+  background: #f9fbff;
+}
+
+/* TEXT */
+.lead-name {
+  font-weight: 600;
+}
+
+.contact-email {
+  font-size: 13px;
+}
+
+.contact-mobile {
+  font-size: 12px;
+  color: #888;
+}
+
+.package-type {
+  font-size: 13px;
+}
+
+.price {
+  font-weight: 700;
+}
+
+/* STATUS */
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-pill.NEW {
+  background: #e6f0ff;
+  color: #2563eb;
+}
+
+.status-pill.IN_PROGRESS {
+  background: #fff7ed;
+  color: #f59e0b;
+}
+
+.status-pill.CONVERTED {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.status-pill.DISCARDED {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ACTIONS */
+.actions i {
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.actions .edit {
+  color: #089c08
+}
+
+.actions .delete {
+  color: #dc2626;
+}
+
+/* FOOTER */
+.table-footer {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #666;
+  background: #fafafa;
+}
+
+ .child-row td {
+          background: #f8faff;
+          /* border-left: 3px solid #4285f4; */
+          font-size: 13px;
+        }
+        .parent-row td {
+          font-weight: 500;
+        }
