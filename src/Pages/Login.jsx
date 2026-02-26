@@ -28,7 +28,11 @@ const Login = () => {
       api.post('/riya_dmclead/login', values)
         .then(res => {
           const msg = res?.data?.message || 'Logged in successfully';
-           localStorage.setItem("riya_user", JSON.stringify(res.data));
+          localStorage.setItem("riya_user", JSON.stringify({
+            token: res.data.token,
+            role: res.data.role,
+            username: res.data.username,
+          }));
           setServerMessage(msg);
           setIsSuccess(true);
           
@@ -84,9 +88,9 @@ const Login = () => {
                 </button>
             </form>
 
-            {/* <p className="text-center mt-3">
+            <p className="text-center mt-3">
                 Don't have an account? <Link to="/signup">Signup</Link>
-            </p> */}
+            </p>
         </div>
         </div>
 

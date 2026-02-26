@@ -3,65 +3,41 @@ import "./forms.css";
 import "../Components/layout.css";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
-
+// import Footer from "../Components/Footer"
+ 
  
 const MiniBar = ({ value, max, color }) => (
-  <div style={{ height: 5, background: "#eef2f7", borderRadius: 99, overflow: "hidden", marginTop: 10 }}>
+  <div className="mini-bar">
     <div
+      className="mini-bar-fill"
       style={{
-        height: "100%",
         width: `${max ? Math.min((value / max) * 100, 100) : 0}%`,
         background: color,
-        borderRadius: 99,
-        transition: "width 1.2s cubic-bezier(.4,0,.2,1)",
       }}
     />
   </div>
 );
  
 const StatCard = ({ label, value, icon, accent, sub, barValue, barMax }) => (
-  <div
-    style={{
-      background: "#fff",
-      borderRadius: 12,
-      padding: "20px 22px",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
-      borderTop: `4px solid ${accent}`,
-      flex: "1 1 160px",
-      minWidth: 150,
-      position: "relative",
-      overflow: "hidden",
-      fontFamily: "Poppins, sans-serif",
-    }}
-  >
-    {/* soft glow circle */}
-    <div style={{
-      position: "absolute", top: -18, right: -18,
-      width: 80, height: 80, borderRadius: "50%",
-      background: accent, opacity: 0.09, pointerEvents: "none",
-    }} />
+  <div className="stat-card" style={{ borderTop: `4px solid ${accent}` }}>
+  <div className="stat-glow" style={{ background: accent }} />
 
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-      <div>
-        <p style={{
-          margin: 0, fontSize: 11, fontWeight: 600, color: "#7f8c8d",
-          letterSpacing: ".07em", textTransform: "uppercase",
-        }}>{label}</p>
-        <p style={{ margin: "6px 0 0", fontSize: 30, fontWeight: 700, color: "#2d2d2d", lineHeight: 1 }}>
-          {value}
-        </p>
-        {sub && <p style={{ margin: "4px 0 0", fontSize: 12, color: "#aaa" }}>{sub}</p>}
-      </div>
-      <div style={{
-        fontSize: 20, background: accent + "18",
-        borderRadius: 10, padding: "8px 10px", lineHeight: 1,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        {icon}
-      </div>
+  <div className="stat-header">
+    <div>
+      <p className="stat-label">{label}</p>
+      <p className="stat-value">{value}</p>
+      {sub && <p className="stat-sub">{sub}</p>}
     </div>
-    {barMax != null && <MiniBar value={barValue ?? 0} max={barMax} color={accent} />}
+
+    <div className="stat-icon" style={{ background: accent + "18" }}>
+      {icon}
+    </div>
   </div>
+
+  {barMax != null && (
+    <MiniBar value={barValue ?? 0} max={barMax} color={accent} />
+  )}
+</div>
 );
 
  
@@ -82,8 +58,8 @@ const RecentRow = ({ lead, index, navigate }) => {
       <td style={{ padding: "11px 14px", color: "#aaa", fontSize: 13 }}>{index + 1}</td>
       <td style={{ padding: "11px 8px" }}>
         <span style={{
-          fontSize: 11, fontWeight: 700, background: "#e8f0fe",
-          color: "#1a56db", borderRadius: 5, padding: "2px 8px",
+          fontSize: 11, fontWeight: 700, background: "#dde9f4",
+          color: "var(--color-ocean)", borderRadius: 5, padding: "2px 8px",
         }}>
           #{lead.invoice_no}
         </span>
@@ -95,13 +71,13 @@ const RecentRow = ({ lead, index, navigate }) => {
       <td style={{ padding: "11px 8px", fontSize: 13, color: "#555" }}>{lead.agent_name || "—"}</td>
       <td style={{ padding: "11px 8px" }}>
         <span style={{
-          background: "#e7f0ff", color: "#0d6efd",
+          background: "#dde9f4", color: "var(--color-ocean)",
           borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 600,
         }}>
           {lead.package_types || "—"}
         </span>
       </td>
-      <td style={{ padding: "11px 8px", fontWeight: 700, color: "#0d6efd", fontSize: 13 }}>
+      <td style={{ padding: "11px 8px", fontWeight: 700, color: "var(--color-ocean)", fontSize: 13 }}>
         ${Number(lead.total_price || 0).toLocaleString()}
       </td>
       <td style={{ padding: "11px 8px", fontSize: 13, color: "#666" }}>
@@ -117,6 +93,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
   const navigate = useNavigate();
+
+  const userData = JSON.parse(localStorage.getItem("riya_user") || "{}");
+  const userRole = userData?.role?.toLowerCase() || "";
+  const isUser = userRole === "user";
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -162,11 +142,11 @@ const Dashboard = () => {
 
   /* filter pills */
   const filters = [
-    { key: "ALL",         label: "All Leads",   count: totalLeads,             color: "#0d6efd" },
-    { key: "NEW",         label: "New",         count: countOf("NEW"),         color: "#4C92A9" },
-    { key: "IN_PROGRESS", label: "In Progress", count: countOf("IN_PROGRESS"), color: "#f59e0b" },
-    { key: "CONVERTED",   label: "Converted",   count: countOf("CONVERTED"),   color: "#0e9b6c" },
-    { key: "DISCARDED",   label: "Discarded",   count: countOf("DISCARDED"),   color: "#dc2626" },
+    { key: "ALL",         label: "All Leads",   count: totalLeads,             color: "var(--color-ocean)" },
+    { key: "NEW",         label: "New",         count: countOf("NEW"),         color: "var(--color-steel)" },
+    { key: "IN_PROGRESS", label: "In Progress", count: countOf("IN_PROGRESS"), color: "#e8a838" },
+    { key: "CONVERTED",   label: "Converted",   count: countOf("CONVERTED"),   color: "var(--color-sage)" },
+    { key: "DISCARDED",   label: "Discarded",   count: countOf("DISCARDED"),   color: "#d95c5c" },
   ];
 
   const filteredLeads = activeFilter === "ALL"
@@ -175,19 +155,19 @@ const Dashboard = () => {
 
   /* theme accent colours */
   const C = {
-    total:     "#0d6efd",
-    new:       "#4C92A9",
-    progress:  "#f59e0b",
-    converted: "#0e9b6c",
-    discarded: "#dc2626",
-    revenue:   "#2aadee",
-    pax:       "#4C92A9",
+    total:     "#2e8fb5",
+    new:       "#8fbb9a",
+    progress:  "#e8a838",
+    converted: "#8fbb9a",
+    discarded: "#d95c5c",
+    revenue:   "#2e8fb5",
+    pax:       "#8fb5c8",
   };
 
   /* ── loading ── */
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 320, fontFamily: "Poppins, sans-serif" }}>
-      <div style={{ textAlign: "center", color: "#0d6efd" }}>
+      <div style={{ textAlign: "center", color: "var(--color-ocean)" }}>
         <div style={{ fontSize: 38, marginBottom: 10 }}>🔄</div>
         <p style={{ fontWeight: 600 }}>Loading dashboard…</p>
       </div>
@@ -195,12 +175,12 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="frontload" style={{ fontFamily: "Poppins, sans-serif", background: "#f7fafc", minHeight: "100vh" }}>
-
+    // <div className="frontload" style={{ fontFamily: "Poppins, sans-serif", background: "#f7fafc", minHeight: "100vh" }}>
+<div className="frontload" >
       {/* ── PAGE HEADER ─────────────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+      <div className="dashboard-header">
         <div>
-          <h2 className="text-primary">Dashboard</h2>
+          <h2 className="text-primary-new">Dashboard</h2>
           <p style={{ margin: "3px 0 0", color: "#888", fontSize: 13 }}>
             {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
@@ -221,7 +201,7 @@ const Dashboard = () => {
         <StatCard label="In Progress"   value={countOf("IN_PROGRESS")}              icon="⚙️" accent={C.progress}  sub="being worked on"     barValue={countOf("IN_PROGRESS")} barMax={totalLeads || 1} />
         <StatCard label="Converted"     value={countOf("CONVERTED")}                icon="✅" accent={C.converted} sub="closed & won"        barValue={countOf("CONVERTED")}   barMax={totalLeads || 1} />
         <StatCard label="Discarded"     value={countOf("DISCARDED")}                icon="🗑️" accent={C.discarded} sub="closed / lost"       barValue={countOf("DISCARDED")}   barMax={totalLeads || 1} />
-        <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="💰" accent={C.revenue}  sub="across all versions" />
+        {!isUser && (<StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="💰" accent={C.revenue}  sub="across all versions" />)}
         <StatCard label="Total Pax"     value={totalPax.toLocaleString()}           icon="👥" accent={C.pax}      sub="adults + children + infants" />
       </div>
 
@@ -272,8 +252,8 @@ const Dashboard = () => {
             <h4 className="section-title" style={{ margin: 0, border: "none", paddingBottom: 0, fontSize: 15 }}>
               Recent Proformas
               <span style={{
-                marginLeft: 10, fontSize: 11, background: "#e8f0fe",
-                color: "#1a56db", borderRadius: 5, padding: "2px 8px", fontWeight: 700,
+                marginLeft: 10, fontSize: 11, background: "#dde9f4",
+                color: "var(--color-ocean)", borderRadius: 5, padding: "2px 8px", fontWeight: 700,
               }}>
                 {filteredLeads.length}
               </span>
@@ -282,7 +262,7 @@ const Dashboard = () => {
               onClick={() => navigate("/lead-list")}
               style={{
                 background: "none", border: "1px solid #e5e7eb", borderRadius: 25,
-                padding: "5px 14px", fontSize: 12, color: "#0d6efd",
+                padding: "5px 14px", fontSize: 12, color: "var(--color-ocean)",
                 fontWeight: 600, cursor: "pointer",
               }}
             >
@@ -336,7 +316,7 @@ const Dashboard = () => {
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#2d2d2d" }}>
                       {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  "}&nbsp;{name}
                     </span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#0d6efd" }}>{count}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-ocean)" }}>{count}</span>
                   </div>
                   <div style={{ height: 6, background: "#eef2f7", borderRadius: 99 }}>
                     <div style={{
@@ -360,8 +340,8 @@ const Dashboard = () => {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {topPkgs.map(([name, count]) => (
                     <div key={name} style={{
-                      background: "#e7f0ff", borderRadius: 8,
-                      padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "#0d6efd",
+                      background: "#dde9f4", borderRadius: 8,
+                      padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "var(--color-ocean)",
                       display: "flex", alignItems: "center", gap: 6,
                     }}>
                       {name}
@@ -379,13 +359,14 @@ const Dashboard = () => {
           </div> */}
 
           {/* REVENUE SUMMARY */}
+          {!isUser && (
           <div className="lead-card" style={{ padding: "16px 20px", borderRadius: 12 }}>
             <h4 className="section-title" style={{ fontSize: 14 }}>📊 Revenue Summary</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                { label: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`,  color: "#0d6efd" },
-                { label: "Total Pax",     value: `${totalPax} pax`,                     color: "#4C92A9" },
-                { label: "Avg per Lead",  value: totalLeads ? `$${Math.round(totalRevenue / totalLeads).toLocaleString()}` : "—", color: "#2aadee" },
+                { label: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`,  color: "var(--color-ocean)" },
+                { label: "Total Pax",     value: `${totalPax} pax`,                     color: "var(--color-steel)" },
+                { label: "Avg per Lead",  value: totalLeads ? `$${Math.round(totalRevenue / totalLeads).toLocaleString()}` : "—", color: "var(--color-steel)" },
               ].map(item => (
                 <div key={item.label} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -397,12 +378,13 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
+          )}
 
           {/* QUICK ACTIONS */}
           <div style={{
-            background: "linear-gradient(135deg, #0d6efd 0%, #4C92A9 100%)",
+            background: "linear-gradient(135deg, var(--color-ocean) 0%, var(--color-steel) 100%)",
             borderRadius: 12, padding: "18px 20px", color: "#fff",
-            boxShadow: "0 8px 24px rgba(13,110,253,0.25)",
+            boxShadow: "0 8px 24px rgba(46,143,181,0.25)",
           }}>
             <h4 style={{ margin: "0 0 14px", fontWeight: 700, fontSize: 14 }}>⚡ Quick Actions</h4>
             {[
@@ -430,6 +412,7 @@ const Dashboard = () => {
 
         </div>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 };

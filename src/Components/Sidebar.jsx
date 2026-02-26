@@ -10,27 +10,32 @@ const menuConfig = [
     title: "Dashboard",
        icon: Invoiceicon,
     path: "/dashboard",
+    roles:["admin", "superadmin", "user"],
   },
   {
     title: "Add Performa",
     icon: Addleadicon,
     path: "/New-lead",
+    roles:["admin", "superadmin", "user"],
   },
   {
     title: "Proforma Invoices",
     icon: detailsleadicon,
     path: "/Leadlist",
+    roles:["admin", "superadmin", "user"],
   },
-//  {
-//     title: "Invoices",
-//     icon: Invoiceicon,
-//     path: "/settings",
-//   },
-//  {
-//     title: "Settings",
-//     icon: Setting,
-//     path: "/settings",
-//   },
+ {
+    title: "Add Users",
+    icon: Invoiceicon,
+    path: "/Newuser",
+    roles:["admin", "superadmin"],
+  },
+ {
+    title: "Settings",
+    icon: Setting,
+    path: "/settings",
+    roles:[ "superadmin"],
+  },
   
 ];
 
@@ -39,20 +44,23 @@ const Sidebar = ({ collapsed }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const sidebarRef  = useRef(null);
 
+  const userData = JSON.parse(localStorage.getItem("riya_user") || "{}");
+  const userRole = userData?.role?.toLowerCase() || "";
+
+  const filteredMenu = menuConfig.filter((menu) =>
+    menu.roles.includes(userRole) 
+    );
   // Auto open submenu if route matches
   useEffect(() => {
-    menuConfig.forEach((menu, index) => {
+    filteredMenu.forEach((menu, index) => {
       if (menu.children) {
         const match = menu.children.find(
           (child) => location.pathname === child.path
         );
-        if (match) {
-          setOpenMenu(index);
-        }
+        if (match) setOpenMenu(index);
       }
     });
   }, [location.pathname]);
-
   //Close sidebar click outside
   useEffect(()=>{
     const handleClickOutside = (event) => {
@@ -77,7 +85,7 @@ const Sidebar = ({ collapsed }) => {
   return (
     <aside ref={sidebarRef} className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
       <nav className="sidebar__nav">
-        {menuConfig.map((menu, index) => (
+        {filteredMenu.map((menu, index) => (
           <div key={index}>
             {!menu.children ? (
               <NavLink

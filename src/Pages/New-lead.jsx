@@ -19,9 +19,11 @@ const LeadForm = () => {
   const [agentAddress, setAgentAddress] = useState("");
 
   const [packageType, setPackageType] = useState("");
- 
+  const [pkgamount, setPkgAmount] = useState("")
   const [inclusion, setInclusion] = useState("");
   const [itineraries, setItineraries] = useState([]);
+ const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [currencyRates, setCurrencyRates] = useState({});
 
    const [formData, setFormData] = useState({
     invoice_no: "",
@@ -94,6 +96,21 @@ const LeadForm = () => {
   //   }
   //   fetchLead();
   // }, [id]);
+
+   const convertAmount = (amount) => {
+  const rate = currencyRates?.[selectedCurrency]?.rate ?? 1;
+  return (parseFloat(amount || 0) * rate).toFixed(2);
+};
+
+const getCurrencySymbol = () => {
+  return currencyRates?.[selectedCurrency]?.symbol || "$";
+};
+
+const getCurrencyName = () => {
+  return currencyRates?.[selectedCurrency]?.name || "US DOLLARS";
+};
+
+
 useEffect(() => {
     if (!id) return;
     const fetchLeadById = async () => {
@@ -124,6 +141,7 @@ useEffect(() => {
         // Populate itineraries table
         setItineraries(existingItineraries.map(it => ({
           packageType: it.package_type,
+          pkgamount : it.pkgamount,
           inclusion:   it.inclusions,
           adultCount:  it.adult_count,
           childCount:  it.child_count,
@@ -131,7 +149,8 @@ useEffect(() => {
           adultTotal:  it.adult_total,
           childTotal:  it.child_total,
           infantTotal: it.infant_total,
-          total:       it.total,
+          totalUSD: it.total,
+          currency: selectedCurrency   
         })));
       } catch (error) {
         console.error("Error fetching lead:", error);
@@ -142,7 +161,20 @@ useEffect(() => {
   }, [id]);
 
   
+useEffect(() => {
+  const fetchRates = async () => {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
 
+    setCurrencyRates({
+      USD: { rate: 1, symbol: "$", name: "US DOLLARS" },
+      THB: { rate: data.rates.THB, symbol: "฿", name: "BAHT" },
+      CAD: { rate: data.rates.CAD, symbol: "C$", name: "CANADIAN DOLLARS" },
+    });
+  };
+
+  fetchRates();
+}, []);
   // ── EDIT mode: bind existing lead data (invoice_no unchanged) ───────────────
   useEffect(() => {
     if (!editId) return;
@@ -171,6 +203,7 @@ useEffect(() => {
 
         setItineraries(existingItineraries.map(it => ({
           packageType: it.package_type,
+          pkgamount : it.pkgamount,
           inclusion:   it.inclusions,
           adultCount:  it.adult_count,
           childCount:  it.child_count,
@@ -178,7 +211,8 @@ useEffect(() => {
           adultTotal:  it.adult_total,
           childTotal:  it.child_total,
           infantTotal: it.infant_total,
-          total:       it.total,
+          totalUSD: it.total,   
+          currency: selectedCurrency   
         })));
       } catch (error) {
         console.error("Error fetching lead for edit:", error);
@@ -188,14 +222,17 @@ useEffect(() => {
     fetchForEdit();
   }, [editId]);
 
-  const handleAddItinerary = () => {
+  const handleAddItinerary = async () => {
     if (!packageType) return; // optional validation
     const adultTotal = Number(formData.adult) * Number(formData.adult_price || 0);
     const childTotal = Number(formData.child) * Number(formData.child_price || 0);
     const infantTotal = Number(formData.infant) * Number(formData.infant_price || 0);
-    const rowTotal = adultTotal + childTotal + infantTotal;
+    const calculatedTotal = adultTotal + childTotal + infantTotal;
+
+    const finalTotal = pkgamount ? Number(pkgamount) :calculatedTotal;
     const newItem = {
       packageType,
+      pkgamount,
       inclusion,
       adultCount: formData.adult,
       childCount: formData.child,
@@ -203,13 +240,15 @@ useEffect(() => {
       adultTotal,
       childTotal,
       infantTotal,
-      total: rowTotal,
+      totalUSD: finalTotal,
+      currency: selectedCurrency 
     };
-
+   
     setItineraries([...itineraries, newItem]);
 
     // Reset fields
     setPackageType("");
+    setPkgAmount("");
     setInclusion("");
     setFormData((prev) => ({
       ...prev,
@@ -263,8 +302,8 @@ useEffect(() => {
     else if (!/\S+@\S+\.\S+/.test(formData.custemail))
       newErrors.custemail = "Invalid email";
 
-    if (!formData.custmobile?.trim())
-      newErrors.custmobile = "Mobile number is required";
+    // if (!formData.custmobile?.trim())
+    //   newErrors.custmobile = "Mobile number is required";
 
     // if (formData.adult < 1) newErrors.adult = "At least 1 adult is required";
 
@@ -293,7 +332,8 @@ useEffect(() => {
       agent_address:    agentAddress,
       bank_charge:      formData.bank_charge,
       remark:           formData.remark,
-      grand_total:      grandTotal,
+      grand_total:      grandTotalUSD,
+      currency: selectedCurrency,
       itineraries,
       adult:            formData.adult,
       child:            formData.child,
@@ -340,16 +380,16 @@ useEffect(() => {
     );
   }
 
-  const grandTotal = itineraries.reduce(
-    (sum, item) => sum + Number(item.total),
-    0,
-  );
+  const grandTotalUSD = itineraries.reduce(
+  (sum, item) => sum + Number(item.totalUSD || 0),
+  0,
+);
 
   return (
     <div className="container-fluid mb-5">
       <div className=" ">
         <div className="d-flex justify-content-between align-items-center ">
-          <h3 className="text-primary">
+          <h3 className="text-primary-new">
             {isEditMode ? "Edit Lead" : isChildMode ? "New Version of Lead" : "Add New Proforma "}
           </h3>
           <button
@@ -381,7 +421,7 @@ useEffect(() => {
 
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Invoice No</label>
+                  <label>Invoice No *</label>
                   <input
                     placeholder="Enter Invoice No"
                     className="form-control modern-input"
@@ -428,7 +468,7 @@ useEffect(() => {
                 </div>
 
                 <div className="form-group">
-                  <label>Mobile Number *</label>
+                  <label>Mobile Number </label>
                   <input
                     placeholder="Enter Mobile Number"
                     className="form-control modern-input"
@@ -514,7 +554,7 @@ useEffect(() => {
 
               <div className="form-grid three">
                 <div className="form-group">
-                  <label>Package Type *</label>
+                  <label >Package Type *</label>
                   <input
                     className="form-control modern-input"
                     placeholder="Land / Hotel / Tour etc."
@@ -522,7 +562,18 @@ useEffect(() => {
                     onChange={(e) => setPackageType(e.target.value)}
                   />
                 </div>
-
+                   <div className="form-group">
+                  <label>Package Value</label>
+                  <div className="inline-input">
+                   <input type="text" className="form-control modern-input"
+                      placeholder="Enter Amount" value={pkgamount}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, "");
+                        setPkgAmount(value);
+                      }}
+                    />
+                  </div>
+                </div>
                 <div className="form-group">
                   <label>Add Inclusions (Optional)</label>
                   <div className="inline-input">
@@ -535,16 +586,7 @@ useEffect(() => {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>&nbsp;</label>
-                  <button
-                    type="button"
-                    className="btn btn-success btn-add"
-                    onClick={handleAddItinerary}
-                  >
-                    <i className="fas fa-plus" aria-hidden="true"></i> Add Package
-                  </button>
-                </div>
+              
 
                 <div className="form-group">
                   <div className="passenger-box">
@@ -554,11 +596,12 @@ useEffect(() => {
                       setValue={(value) => setFormData({ ...formData, adult: value })}
                     />
                     <input
-                      type="number"
+                      type="text"
                       className="form-control modern-input"
                       placeholder="Enter price"
+                      disabled={!!pkgamount}
                       value={formData.adult_price}
-                      onChange={(e) => setFormData({ ...formData, adult_price: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, adult_price: e.target.value.replace(/[^0-9]/g, "") })}
                     />
                   </div>
                   {errors.adult && <small className="text-danger">{errors.adult}</small>}
@@ -573,11 +616,12 @@ useEffect(() => {
                     />
                     {errors.child && <small className="text-danger">{errors.child}</small>}
                     <input
-                      type="number"
+                      type="text"
                       className="form-control modern-input"
                       placeholder="Enter price"
+                      disabled={!!pkgamount}
                       value={formData.child_price}
-                      onChange={(e) => setFormData({ ...formData, child_price: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, child_price: e.target.value.replace(/[^0-9]/g, "") })}
                     />
                   </div>
                 </div>
@@ -591,13 +635,37 @@ useEffect(() => {
                     />
                     {errors.infant && <small className="text-danger">{errors.infant}</small>}
                     <input
-                      type="number"
+                      type="text"
                       className="form-control modern-input"
                       placeholder="Enter price"
+                      disabled={!!pkgamount}
                       value={formData.infant_price}
                       onChange={(e) => setFormData({ ...formData, infant_price: e.target.value })}
                     />
                   </div>
+                </div>
+                  <div className="form-group">
+                    <label>Select Currency</label>
+                    <select className="form-select currency-selector no-print selctCurrency modern-input" 
+                      value={selectedCurrency} 
+                      onChange={(e) => setSelectedCurrency(e.target.value)}
+                      
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="THB">THB (฿)</option>
+                      <option value="CAD">CAD (C$)</option>
+                    
+                    </select>
+                  </div>
+                  <div className="form-group">
+                  <label>&nbsp;</label>
+                  <button
+                    type="button"
+                    className="btn btn-success btn-add"
+                    onClick={handleAddItinerary}
+                  >
+                    <i className="fas fa-plus" aria-hidden="true"></i> Add Package
+                  </button>
                 </div>
               </div>
 
@@ -631,7 +699,7 @@ useEffect(() => {
                           <td>{item.adultCount  > 0 ? `${item.adultTotal} (${item.adultCount} Adult)`    : 0}</td>
                           <td>{item.childCount  > 0 ? `${item.childTotal} (${item.childCount} Child)`    : 0}</td>
                           <td>{item.infantCount > 0 ? `${item.infantTotal} (${item.infantCount} Infant)` : 0}</td>
-                          <td>{item.total}</td>
+                          <td>  {getCurrencySymbol()} {convertAmount(item.totalUSD)}</td>
                           <td>
                             <button
                               className="btn-delete"
@@ -651,7 +719,7 @@ useEffect(() => {
                         <td colSpan="6" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Grand Total
                         </td>
-                        <td style={{ fontWeight: "bold" }}>{grandTotal}</td>
+                        <td style={{ fontWeight: "bold" }}> {getCurrencySymbol()} {convertAmount(grandTotalUSD)}</td>
                         <td></td>
                       </tr>
                     </tfoot>

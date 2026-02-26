@@ -116,7 +116,7 @@ const parentLeads = leads.filter(l => !l.parent_lead_id);
           <td><div className="contact-mobile">{lead.mobile}</div></td>
           <td className="package-type">{lead.agent_name    || "-"}</td>
           <td className="package-type">{lead.package_types || "-"}</td>
-          <td className="price">${Number(lead.total_price || 0).toLocaleString()}</td>
+          <td className="price"> {Number(lead.total_price || 0).toLocaleString()}</td>
           <td>
             {totalPassengers}
             <small className="text-muted">
@@ -169,7 +169,7 @@ const handleDelete = async (id) => {
   return (
     <div className="container-fluid mt-4 mb-5 frontload">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="text-primary">All Proforma Invoice</h3>
+        <h3 className="text-primary-new">All Proforma Invoice</h3>
         <button
           className="btn btn-primary"
           onClick={() => navigate("/new-lead")}

@@ -188,7 +188,7 @@ const getCurrencyName = () => {
           <i className="fas fa-arrow-left"></i> Back
         </button>
         <div className="invoice-actions">
-           <select 
+           {/* <select 
             className="currency-selector no-print selctCurrency" 
             value={selectedCurrency} 
             onChange={(e) => setSelectedCurrency(e.target.value)}
@@ -197,12 +197,8 @@ const getCurrencyName = () => {
             <option value="USD">USD ($)</option>
             <option value="THB">THB (฿)</option>
             <option value="CAD">CAD (C$)</option>
-            {/* <option value="AUD">AUD (A$)</option>
-              <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-            <option value="INR">INR (₹)</option>
-            <option value="SGD">SGD (S$)</option> */}
-          </select>
+          
+          </select> */}
           
           <button className="btn-download" onClick={handleDownloadPDF}>
             <i className="fas fa-download"></i> Download PDF

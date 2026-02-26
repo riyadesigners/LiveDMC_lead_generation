@@ -5,6 +5,11 @@ const Topbar = ({ onToggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
 
+  //get log in details
+  const userData = JSON.parse(localStorage.getItem("riya_user") || "{}");
+  const username = userData?.username || "User";
+  const avatarletter = username.charAt(0).toUpperCase();
+
   const handleLogout = () => {
     localStorage.removeItem("riya_user");
     window.location.href = "/login";
@@ -59,8 +64,8 @@ const Topbar = ({ onToggleSidebar }) => {
 
         {/* User */}
         <div className="user-info">
-          <div className="avatar">V</div>
-          <span className="username">Vaibhav</span>
+          <div className="avatar">{avatarletter}</div>
+          <span className="username">{username}</span>
         </div>
 
         <button
