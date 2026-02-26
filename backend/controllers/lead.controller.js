@@ -36,6 +36,9 @@ exports.createLead = async (req, res) => {
         });
         }
 
+    // Convert empty strings to null for numeric columns
+    const toNum = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
+
     const leadResult = await client.query(
       `INSERT INTO custleads 
         (invoice_no, customer_name, email, mobile, alternate_contact, contact_person, 
@@ -53,8 +56,8 @@ exports.createLead = async (req, res) => {
                 agent_name,
                 agent_contact,
                 agent_address,
-                grand_total,
-                bank_charge,
+                toNum(grand_total),
+                toNum(bank_charge),
                 remark,
                 parent_lead_id,
                 currency
@@ -73,13 +76,13 @@ exports.createLead = async (req, res) => {
           leadId,
           itineraries[i].packageType,
           itineraries[i].inclusion,
-          itineraries[i].adultCount,
-          itineraries[i].childCount,
-          itineraries[i].infantCount,
-          itineraries[i].adultTotal,
-          itineraries[i].childTotal,
-          itineraries[i].infantTotal,
-          itineraries[i].total
+          toNum(itineraries[i].adultCount),
+          toNum(itineraries[i].childCount),
+          toNum(itineraries[i].infantCount),
+          toNum(itineraries[i].adultTotal),
+          toNum(itineraries[i].childTotal),
+          toNum(itineraries[i].infantTotal),
+          toNum(itineraries[i].totalUSD)
         ]
            ); 
     }
@@ -138,6 +141,7 @@ exports.getLeadList = async (req, res) => {
         c.bank_charge,
         c.remark,
         c.grand_total AS total_price,
+        c.currency,
         c.created_at,
         STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
         SUM(li.adult_count)  AS total_adults,
@@ -220,15 +224,18 @@ exports.updateLead = async (req, res) => {
             remark,
             grand_total,
             itineraries,
+            currency,
         } = req.body;
+
+        const toNum = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
 
         //Insert NEW lead (child)
         const leadResult = await client.query(
             `INSERT INTO custleads
             (invoice_no, customer_name, email, mobile, alternate_contact,
              contact_person, address, agent_name, agent_contact,
-             agent_address, grand_total, bank_charge, remark, parent_lead_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+             agent_address, grand_total, bank_charge, remark, parent_lead_id, currency)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
             [
                 newInvoice,
                 customer_name,
@@ -240,10 +247,11 @@ exports.updateLead = async (req, res) => {
                 agent_name,
                 agent_contact,
                 agent_address,
-                grand_total,
-                bank_charge,
+                toNum(grand_total),
+                toNum(bank_charge),
                 remark,
-                originalLead.parent_lead_id || originalLead.id
+                originalLead.parent_lead_id || originalLead.id,
+                currency
             ]
         );
 
@@ -261,13 +269,13 @@ exports.updateLead = async (req, res) => {
                     newLeadId,
                     itineraries[i].packageType,
                     itineraries[i].inclusion,
-                    itineraries[i].adultCount,
-                    itineraries[i].childCount,
-                    itineraries[i].infantCount,
-                    itineraries[i].adultTotal,
-                    itineraries[i].childTotal,
-                    itineraries[i].infantTotal,
-                    itineraries[i].totalUSD,
+                    toNum(itineraries[i].adultCount),
+                    toNum(itineraries[i].childCount),
+                    toNum(itineraries[i].infantCount),
+                    toNum(itineraries[i].adultTotal),
+                    toNum(itineraries[i].childTotal),
+                    toNum(itineraries[i].infantTotal),
+                    toNum(itineraries[i].totalUSD),
                 ]
             );
         }

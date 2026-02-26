@@ -2,7 +2,6 @@ import React, { useEffect, useState }  from 'react';
 import { useParams, useNavigate } from 'react-router-dom';  
 import "./invoice.css";
 import api from "../api/axiosInstance";
-import { ca } from 'date-fns/locale';
 import Riyalogo from '../assets/logo.png'
 
 
@@ -83,7 +82,7 @@ const Invoice = () => {
   const [invoiceData, setInvoiceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [selectedCurrency, setSelectedCurrency] = useState('');
   const [currencyRates, setCurrencyRates] = useState({});
 
 
@@ -121,6 +120,12 @@ const getCurrencyName = () => {
 
            const res = await api.get(`/riya_dmclead/getInvoice/${id}`);
             setInvoiceData(res.data);
+            // Set currency from saved lead data, default to USD
+            if (res.data?.lead?.currency) {
+              setSelectedCurrency(res.data.lead.currency);
+            } else {
+              setSelectedCurrency('USD');
+            }
             setLoading(false);
         }
         catch(err){
@@ -200,6 +205,16 @@ const getCurrencyName = () => {
           
           </select> */}
           
+          <select 
+            className="currency-selector no-print selctCurrency" 
+            value={selectedCurrency} 
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+          >
+            <option value="USD">USD ($)</option>
+            <option value="THB">THB (฿)</option>
+            <option value="CAD">CAD (C$)</option>
+          </select>
+          
           <button className="btn-download" onClick={handleDownloadPDF}>
             <i className="fas fa-download"></i> Download PDF
           </button>
@@ -267,10 +282,10 @@ const getCurrencyName = () => {
           </div>
 
           <div className="contact-info">
-            <h5>CONTACT PERSON</h5>
+            <h5>CONTACT DETAILS</h5>
             <div className="contact-person">
-              <i className="fas fa-user-circle"></i>
-              <span>{lead.contact_person || "Mr. Jiju"}</span>
+             <i className="fas fa-solid fa-envelope"></i>
+              <span>{lead.mobile} / {lead.email}</span>
             </div>
           </div>
 
@@ -366,7 +381,8 @@ const getCurrencyName = () => {
              
                <div className="total-amount">{getCurrencySymbol()}{convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))}</div>
               <div className="total-note">
-                {numberToWords(Number(convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))), getCurrencyName())}
+                {numberToWords(Number(convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))))}
+                {" — "}{getCurrencyName()}
               </div>
               <div className="payment-info">
                 Name dynamically as per total - Riya Travel Invoice for travel services to customer

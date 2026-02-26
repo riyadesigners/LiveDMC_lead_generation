@@ -230,6 +230,7 @@ useEffect(() => {
     const calculatedTotal = adultTotal + childTotal + infantTotal;
 
     const finalTotal = pkgamount ? Number(pkgamount) :calculatedTotal;
+    console.log(finalTotal);
     const newItem = {
       packageType,
       pkgamount,

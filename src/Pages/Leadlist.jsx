@@ -116,7 +116,13 @@ const parentLeads = leads.filter(l => !l.parent_lead_id);
           <td><div className="contact-mobile">{lead.mobile}</div></td>
           <td className="package-type">{lead.agent_name    || "-"}</td>
           <td className="package-type">{lead.package_types || "-"}</td>
-          <td className="price"> {Number(lead.total_price || 0).toLocaleString()}</td>
+          <td className="price">
+            {lead.currency === 'THB' ? '฿' : lead.currency === 'CAD' ? 'C$' : '$'}
+            {Number(lead.total_price || 0).toLocaleString()}
+            {lead.currency && lead.currency !== 'USD' && (
+              <small className="text-muted"> {lead.currency}</small>
+            )}
+          </td>
           <td>
             {totalPassengers}
             <small className="text-muted">
@@ -234,6 +240,3 @@ const handleDelete = async (id) => {
 };
 
 export default LeadList;
-
-
- 
