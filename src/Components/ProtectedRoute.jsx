@@ -1,25 +1,28 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import api from "../api/axiosInstance";
 
-const isTokenValid = (token) => {
-    try{
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        const now = Math.floor(Date.now() / 1000);
-        return payload.exp > now;
-    }
-    catch{
-        return false;
-    }
-}
+const ProtectedRoute = ({ children }) => {
+  const [isAuth, setIsAuth] = useState(null);
 
-const ProtectedRoute = ({children}) => {
-   const userData = JSON.parse(localStorage.getItem("riya_user") || "{}");
-   const token = userData?.token;
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.get("/riya_dmclead/check-auth", {
+          withCredentials: true,
+        });
+        setIsAuth(true);
+      } catch {
+        setIsAuth(false);
+      }
+    };
 
-   if(!token || !isTokenValid(token)){
-    return <Navigate to="/login" replace />
-   }
-   return children;
+    checkAuth();
+  }, []);
+
+  if (isAuth === null) return <div>Loading...</div>;
+
+  return isAuth ? children : <Navigate to="/login" />;
 };
 
-export default ProtectedRoute
+export default ProtectedRoute;

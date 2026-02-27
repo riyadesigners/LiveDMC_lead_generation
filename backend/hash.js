@@ -1,12 +1,9 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcrypt');
 
-(async () => {
-  try {
-    const password = "Seenumathew1"; // change if needed
-    const hashed = await bcrypt.hash(password, 10);
-    console.log("Hashed Password:");
-    console.log(hashed);
-  } catch (err) {
-    console.error(err);
-  }
-})();
+async function hash() {
+  const plain = 'Vaibhav14'; // ← put vaibhav's real password
+  const hashed = await bcrypt.hash(plain, 10);
+  console.log(hashed);
+}
+
+hash();

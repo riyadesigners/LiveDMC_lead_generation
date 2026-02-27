@@ -3,12 +3,27 @@ const cors = require ('cors');
 const path = require ("path");
 // const mysql = require('mysql2/promise');
 const pool = require("./config/db");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 pool.connect()
-  .then(() => console.log("✅ PostgreSQL Connected"))
-  .catch(err => console.error("❌ Connection Error:", err));
+  .then(() => console.log(" PostgreSQL Connected"))
+  .catch(err => console.error("Connection Error:", err));
  
 const app = express();
-app.use(cors());
+ 
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8081'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true,   // ✅ required for cookies
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 app.use("/images", express.static("images"));

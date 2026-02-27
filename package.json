@@ -1,6 +1,5 @@
 {
   "name": "DMCLeadGeneration",
-
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,8 +9,10 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
     "bootstrap-datepicker": "^1.10.1",
+    "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "jquery": "^4.0.0",
     "react": "^19.2.0",
