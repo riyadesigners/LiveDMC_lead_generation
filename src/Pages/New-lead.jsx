@@ -97,18 +97,18 @@ const LeadForm = () => {
   //   fetchLead();
   // }, [id]);
 
-   const convertAmount = (amount) => {
-  const rate = currencyRates?.[selectedCurrency]?.rate ?? 1;
-  return (parseFloat(amount || 0) * rate).toFixed(2);
+//    const convertAmount = (amount) => {
+//   const rate = currencyRates?.[selectedCurrency]?.rate ?? 1;
+//   return (parseFloat(amount || 0) * rate).toFixed(2);
+// };
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  THB: "฿",
+  CAD: "C$",
 };
 
-const getCurrencySymbol = () => {
-  return currencyRates?.[selectedCurrency]?.symbol || "$";
-};
-
-const getCurrencyName = () => {
-  return currencyRates?.[selectedCurrency]?.name || "US DOLLARS";
-};
+const getCurrencySymbol = () => CURRENCY_SYMBOLS[selectedCurrency] || "$";
 
 
 useEffect(() => {
@@ -161,20 +161,20 @@ useEffect(() => {
   }, [id]);
 
   
-useEffect(() => {
-  const fetchRates = async () => {
-    const res = await fetch("https://open.er-api.com/v6/latest/USD");
-    const data = await res.json();
+// useEffect(() => {
+//   const fetchRates = async () => {
+//     const res = await fetch("https://open.er-api.com/v6/latest/USD");
+//     const data = await res.json();
 
-    setCurrencyRates({
-      USD: { rate: 1, symbol: "$", name: "US DOLLARS" },
-      THB: { rate: data.rates.THB, symbol: "฿", name: "BAHT" },
-      CAD: { rate: data.rates.CAD, symbol: "C$", name: "CANADIAN DOLLARS" },
-    });
-  };
+//     setCurrencyRates({
+//       USD: { rate: 1, symbol: "$", name: "US DOLLARS" },
+//       THB: { rate: data.rates.THB, symbol: "฿", name: "BAHT" },
+//       CAD: { rate: data.rates.CAD, symbol: "C$", name: "CANADIAN DOLLARS" },
+//     });
+//   };
 
-  fetchRates();
-}, []);
+//   fetchRates();
+// }, []);
   // ── EDIT mode: bind existing lead data (invoice_no unchanged) ───────────────
   useEffect(() => {
     if (!editId) return;
@@ -286,7 +286,7 @@ useEffect(() => {
     setFormData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, invoice_no: "" }));
     if (!isChildMode && value.trim()) {
-      const exists = await checkInvoiceExists(value);
+      const exists = await checkInvoiceExists(value.toUpperCase());
       if (exists) setErrors(prev => ({ ...prev, invoice_no: "Invoice number already exists" }));
     }
   };
@@ -700,7 +700,7 @@ useEffect(() => {
                           <td>{item.adultCount  > 0 ? `${item.adultTotal} (${item.adultCount} Adult)`    : 0}</td>
                           <td>{item.childCount  > 0 ? `${item.childTotal} (${item.childCount} Child)`    : 0}</td>
                           <td>{item.infantCount > 0 ? `${item.infantTotal} (${item.infantCount} Infant)` : 0}</td>
-                          <td>  {getCurrencySymbol()} {convertAmount(item.totalUSD)}</td>
+                          <td>  {getCurrencySymbol()} {Number(item.totalUSD || 0).toFixed(2)}</td>
                           <td>
                             <button
                               className="btn-delete"
@@ -720,7 +720,7 @@ useEffect(() => {
                         <td colSpan="6" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Grand Total
                         </td>
-                        <td style={{ fontWeight: "bold" }}> {getCurrencySymbol()} {convertAmount(grandTotalUSD)}</td>
+                        <td style={{ fontWeight: "bold" }}> {getCurrencySymbol()} {Number(grandTotalUSD || 0).toFixed(2)}</td>
                         <td></td>
                       </tr>
                     </tfoot>

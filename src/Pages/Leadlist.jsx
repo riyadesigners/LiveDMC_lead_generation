@@ -13,6 +13,9 @@ const LeadList = () => {
   const [expandedIds, setExpandedIds] = useState(new Set());  
   const [activeFilter, setActiveFilter] = useState("ALL");
 
+    const userRole = JSON.parse(localStorage.getItem("riya_user"))?.role || "";
+  const canDelete = userRole === "superadmin" || userRole === "admin";
+
  const statusFilters = [
     { key: "ALL",         label: "All Leads",   count: leads.filter(l => !l.parent_lead_id).length },
     { key: "NEW",         label: "New" },
@@ -143,12 +146,13 @@ const parentLeads = leads.filter(l => !l.parent_lead_id);
               onClick={() => navigate(`/edit-lead/${lead.id}`)}
               style={{ cursor: "pointer" }}
             ></i>
-            <i
+            {canDelete && (<i
               className="fas fa-trash delete"
               title="Delete Lead"
               style={{ cursor: "pointer" }}
               onClick={() => handleDelete(lead.id)}
             ></i>
+            )}
           </td>
         </tr>
 

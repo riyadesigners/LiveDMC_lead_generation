@@ -5,8 +5,8 @@ import api from "../api/axiosInstance";
 import Riyalogo from '../assets/logo.png'
 
 
-const numberToWords = (num) => {
-  if (num === 0) return 'ZERO US DOLLARS ONLY';
+const numberToWords = (num, currencyName = 'US DOLLARS') => {
+  if (num === 0) return `ZERO ${currencyName} ONLY`;
   
   const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
   const teens = ['TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
@@ -66,7 +66,7 @@ const numberToWords = (num) => {
     result += convertHundreds(remaining);
   }
   
-  result = result.trim() + ' US DOLLARS';
+  result = result.trim() + ` ${currencyName}`;
   
   // Add cents if present
   if (cents > 0) {
@@ -83,7 +83,6 @@ const Invoice = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('');
-  const [currencyRates, setCurrencyRates] = useState({});
 
 
   //  const currencyRates = {
@@ -93,31 +92,15 @@ const Invoice = () => {
    
   // };
   
- const convertAmount = (amount) => {
-  const rate = currencyRates?.[selectedCurrency]?.rate ?? 1;
-  return (parseFloat(amount || 0) * rate).toFixed(2);
-};
+const CURRENCY_SYMBOLS = { USD: "$", THB: "฿", CAD: "C$" };
+const CURRENCY_NAMES   = { USD: "US DOLLARS", THB: "BAHT", CAD: "CANADIAN DOLLARS" };
 
-const getCurrencySymbol = () => {
-  return currencyRates?.[selectedCurrency]?.symbol || "$";
-};
-
-const getCurrencyName = () => {
-  return currencyRates?.[selectedCurrency]?.name || "US DOLLARS";
-};
+const getCurrencySymbol = () => CURRENCY_SYMBOLS[selectedCurrency] || "$";
+const getCurrencyName   = () => CURRENCY_NAMES[selectedCurrency]   || "US DOLLARS";
+const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
   useEffect(() => {
     const fetchInvoiceData = async () => {
         try{
-          const res2 = await fetch("https://open.er-api.com/v6/latest/USD");
-      const data = await res2.json();
-
-      setCurrencyRates({
-        USD: { rate: 1, symbol: '$', name: 'US DOLLARS' },
-        THB: { rate: data.rates.THB, symbol: '฿', name: 'BAHT' },
-        CAD: { rate: data.rates.CAD, symbol: 'C$', name: 'CANADIAN DOLLARS' },
-      });
-
-
            const res = await api.get(`/riya_dmclead/getInvoice/${id}`);
             setInvoiceData(res.data);
             // Set currency from saved lead data, default to USD
@@ -293,7 +276,7 @@ const getCurrencyName = () => {
             <h5>BILLING ADDRESS</h5>
             <div className="billing-address">
               <i className="fas fa-map-marker-alt"></i>
-              <span>{lead.address || "C-328, Siddharth Excellence"}</span>
+              <span>{lead.address || "-"}</span>
             </div>
           </div>
         </div>
@@ -328,7 +311,7 @@ const getCurrencyName = () => {
                     {item.package_type}
                   </td>
                   <td>{item.adult_count + item.child_count + item.infant_count}</td>
-                  <td>{getCurrencySymbol()} {convertAmount(item.total / (item.adult_count + item.child_count + item.infant_count))}</td>
+                  <td>{(() => { const qty = item.adult_count + item.child_count + item.infant_count; return qty > 0 ? `${getCurrencySymbol()} ${convertAmount(item.total / qty)}` : '-'; })()}</td>
                   <td>{getCurrencySymbol()}{convertAmount(item.total)}</td>
                 </tr>
               ))}
@@ -381,8 +364,7 @@ const getCurrencyName = () => {
              
                <div className="total-amount">{getCurrencySymbol()}{convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))}</div>
               <div className="total-note">
-                {numberToWords(Number(convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))))}
-                {" — "}{getCurrencyName()}
+                {numberToWords(Number(convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))), getCurrencyName())}
               </div>
               <div className="payment-info">
                 Name dynamically as per total - Riya Travel Invoice for travel services to customer

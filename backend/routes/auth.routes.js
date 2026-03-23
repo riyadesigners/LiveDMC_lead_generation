@@ -1,16 +1,13 @@
 const router = require("express").Router();
-const { login } = require("../controllers/auth.controller");
+const authController = require("../controllers/auth.controller");  // single import — uses auth.controller.js
 const { verifyToken, authorizeRoles } = require("../middleware/authMiddleware");
 
-router.post("/login", login);
-router.get("/check-auth", verifyToken, (req, res) => {
-  res.json({ message: "Authenticated", user: req.user });
-});
+router.post("/login", authController.login);
+router.get("/check-auth", verifyToken, authController.checkAuth);
 router.get("/dashboard", verifyToken,
-    authorizeRoles("superadmin", "admin", "user"),
-    (req, res) => {
-        res.json({ message: "Welcome to Dashboard" });
-    }
+  authorizeRoles("superadmin", "admin", "user"),
+  (req, res) => res.json({ message: "Welcome to Dashboard" })
 );
+router.post("/add-user", verifyToken, authorizeRoles("superadmin", "admin"), authController.addUser);
 
 module.exports = router;

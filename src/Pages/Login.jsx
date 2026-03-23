@@ -1,11 +1,8 @@
-import React,{useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from "react-router-dom";
-import logo from '../assets/riya-logo.png'
-import axios from 'axios';
+import logo from '../assets/riya-logo.png';
 import api from '../api/axiosInstance';
-import Validation  from './LoginValidation';
-import CryptoJS from 'crypto-js';
-import { ms } from 'date-fns/locale';
+
 const Toast = ({ message, isSuccess, show, onClose }) => {
   useEffect(() => {
     if (show) {
@@ -43,7 +40,6 @@ const Toast = ({ message, isSuccess, show, onClose }) => {
         />
 
         <div className="toast-header border-0" style={{ backgroundColor: isSuccess ? '#f0fff4' : '#fff5f5' }}>
-          {/* Icon */}
           <span
             className="rounded-circle d-inline-flex align-items-center justify-content-center mr-2"
             style={{
@@ -90,48 +86,64 @@ const Toast = ({ message, isSuccess, show, onClose }) => {
     </div>
   );
 };
+
 const Login = () => {
-   const [errors, setErrors] = useState({})
-    const [toast, setToast] = useState({ show: false, message: '', isSuccess: false });
-  const [serverMessage, setServerMessage] = useState('')
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ show: false, message: '', isSuccess: false });
   const navigate = useNavigate();
 
   const showToast = (message, isSuccess) => {
-    setToast({show:true, message, isSuccess});
-  }
+    setToast({ show: true, message, isSuccess });
+  };
+
   const closeToast = () => {
-    setToast(prev => ({...prev, show:false}));
-  }
- const[values, setValues] = useState({
-    email:'',
-    password:''
-  })
+    setToast(prev => ({ ...prev, show: false }));
+  };
+
+  const [values, setValues] = useState({
+    email: '',
+    password: '',
+  });
+
   const handleInput = (event) => {
-     setValues(prev => ({...prev, [event.target.name]:event.target.value}));
-  }
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await api.post("/riya_dmclead/login", {
-      email: values.email,
-      password: values.password,
-    });
+    setValues(prev => ({ ...prev, [event.target.name]: event.target.value }));
+  };
 
-     
-    localStorage.setItem("riya_user", JSON.stringify({
-      username: res.data.username,
-      role: res.data.role,
-    }));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    showToast("Login Successful!", true);
-    setTimeout(() => navigate("/dashboard"), 1000);
+    // Basic client-side validation
+    const newErrors = {};
+    if (!values.email.trim()) newErrors.email = 'Email is required';
+    if (!values.password) newErrors.password = 'Password is required';
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
 
-  } catch (err) {
-    const message = err.response?.data?.error || "Login failed. Try again.";
-    showToast(message, false);   
-  }
-};
+    try {
+      const res = await api.post("/riya_dmclead/login", {
+        email: values.email,
+        password: values.password,
+      });
+
+      const authRes = await api.get("/riya_dmclead/check-auth");
+      // Store user info (NOT sensitive data — token is in httpOnly cookie)
+      localStorage.setItem("riya_user", JSON.stringify({
+        username: res.data.username,
+        role: authRes.data.role,
+      }));
+
+      showToast("Login Successful!", true);
+      setTimeout(() => navigate("/dashboard"), 1000);
+
+    } catch (err) {
+      const message = err.response?.data?.error || "Login failed. Try again.";
+      showToast(message, false);
+    }
+  };
+
   return (
     <>
       <Toast
@@ -140,49 +152,67 @@ const Login = () => {
         show={toast.show}
         onClose={closeToast}
       />
-   
-     <div className="signup-page">
-        <img src={logo} alt="Logo" className='img-fluid' style={{  position: 'absolute', top: '0px',margin: '0 auto'}} />
-      <div className="signup-container">
 
-        {/* LEFT CARD */}
-        <div className="signup-card">
-           <div className="  p-4 logincard"  >
-            <h3 className="text-center ">Login</h3>
-            <form onSubmit={handleSubmit}>
+      <div className="signup-page">
+        <img
+          src={logo}
+          alt="Logo"
+          className='img-fluid'
+          style={{ position: 'absolute', top: '0px', margin: '0 auto' }}
+        />
+        <div className="signup-container">
+
+          {/* LEFT CARD */}
+          <div className="signup-card">
+            <div className="p-4 logincard">
+              <h3 className="text-center">Login</h3>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                    <label htmlFor='email' className='text-left'>Email</label>
-                   <input type='email'  name='email'
-            value={values.email}
-            onChange={handleInput}
-            className='form-control ' />
-                    {errors.email && <span className='text-danger'>{errors.email}</span>}
+                  <label htmlFor='email' className='text-left'>Email</label>
+                  <input
+                    type='email'
+                    id='email'
+                    name='email'
+                    value={values.email}
+                    onChange={handleInput}
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                 </div>
+
                 <div className="mb-4">
-                    <label>Password</label>
-                    <input type='password'   name='password'
-        value={values.password}
-        onChange={handleInput}  className='form-control '/>
-                    {errors.password && <span className='text-danger'>{errors.password}</span>}
+                  <label htmlFor='password'>Password</label>
+                  <input
+                    type='password'
+                    id='password'
+                    name='password'
+                    value={values.password}
+                    onChange={handleInput}
+                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                    placeholder="Enter your password"
+                  />
+                  {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                 </div>
-                <button className="btn btn-submit  w-100" type="submit">
-                    Login
+
+                <button className="btn btn-submit w-100" type="submit">
+                  Login
                 </button>
-            </form>
+              </form>
 
-            <p className="text-center mt-3">
+              <p className="text-center mt-3">
                 Don't have an account? <Link to="/signup">Signup</Link>
-            </p>
-        </div>
-        </div>
+              </p>
+            </div>
+          </div>
 
-        {/* RIGHT IMAGE */}
-        <div className="signup-image"></div>
+          {/* RIGHT IMAGE */}
+          <div className="signup-image"></div>
 
+        </div>
       </div>
-    </div>
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

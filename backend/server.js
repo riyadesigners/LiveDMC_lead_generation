@@ -21,7 +21,7 @@ app.use(cors({
   },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type'],
-  credentials: true,   // ✅ required for cookies
+  credentials: true,    
 }));
 app.use(cookieParser());
 app.use(express.json());

@@ -6,6 +6,7 @@ exports.createLead = async (req, res) => {
     const client = await pool.connect();
     try{
         await client.query("BEGIN");
+        const created_by = req.user?.user_id || null; // from JWT middleware
         const {
             invoice_no,
             customer_name,
@@ -42,9 +43,9 @@ exports.createLead = async (req, res) => {
     const leadResult = await client.query(
       `INSERT INTO custleads 
         (invoice_no, customer_name, email, mobile, alternate_contact, contact_person, 
-            address, agent_name, agent_contact, agent_address, grand_total, bank_charge, remark, parent_lead_id,currency
+            address, agent_name, agent_contact, agent_address, grand_total, bank_charge, remark, parent_lead_id, currency, created_by
             )  
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
             [
                 invoice_no,
                 customer_name,
@@ -60,7 +61,8 @@ exports.createLead = async (req, res) => {
                 toNum(bank_charge),
                 remark,
                 parent_lead_id,
-                currency
+                currency,
+                created_by
             ],
        );
 
@@ -106,7 +108,7 @@ exports.checkInvoice = async (req, res) => {
         const { invoiceNo } = req.params;
         
         const result = await pool.query(
-            `SELECT invoice_no FROM custleads WHERE invoice_no = $1`,
+            `SELECT invoice_no FROM custleads WHERE UPPER(invoice_no) = UPPER($1)`,
             [invoiceNo]
         );
         
@@ -124,37 +126,41 @@ exports.checkInvoice = async (req, res) => {
 //get all leads
 exports.getLeadList = async (req, res) => {
     try {
-         const result = await pool.query(`
-      SELECT
-        c.id,
-        c.parent_lead_id,
-        c.invoice_no,
-        c.customer_name,
-        c.email,
-        c.mobile,
-        c.alternate_contact,
-        c.contact_person,
-        c.address,
-        c.agent_name,
-        c.agent_contact,
-        c.agent_address,
-        c.bank_charge,
-        c.remark,
-        c.grand_total AS total_price,
-        c.currency,
-        c.created_at,
-        STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
-        SUM(li.adult_count)  AS total_adults,
-        SUM(li.child_count)  AS total_children,
-        SUM(li.infant_count) AS total_infants
-      FROM custleads c
-      LEFT JOIN lead_itineraries li ON c.id = li.lead_id
-      GROUP BY c.id
-      ORDER BY c.created_at DESC
-    `);
+        const requestingUserId = req.user?.user_id;
+        const requestingRole   = req.user?.role;
 
-    res.status(200).json(result.rows);
- 
+        console.log("getLeadList -> req.user:", req.user); // debug
+
+        const isRestricted = requestingRole === "user";
+
+        const selectCols = `
+              SELECT
+                c.id, c.parent_lead_id, c.invoice_no, c.customer_name,
+                c.email, c.mobile, c.alternate_contact, c.contact_person,
+                c.address, c.agent_name, c.agent_contact, c.agent_address,
+                c.bank_charge, c.remark, c.grand_total AS total_price,
+                c.currency, c.created_at, c.created_by,
+                STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
+                SUM(li.adult_count)  AS total_adults,
+                SUM(li.child_count)  AS total_children,
+                SUM(li.infant_count) AS total_infants
+              FROM custleads c
+              LEFT JOIN lead_itineraries li ON c.id = li.lead_id`;
+
+        let result;
+        if (isRestricted) {
+            result = await pool.query(
+                selectCols + ` WHERE c.created_by = $1 GROUP BY c.id ORDER BY c.created_at DESC`,
+                [requestingUserId]
+            );
+        } else {
+            result = await pool.query(
+                selectCols + ` GROUP BY c.id ORDER BY c.created_at DESC`
+            );
+        }
+
+        res.status(200).json(result.rows);
+
     } catch (err) {
         console.error("Error fetching leads:", err);
         res.status(500).json({ message: "Internal Server Error", error: err.message });
@@ -210,6 +216,7 @@ exports.updateLead = async (req, res) => {
 
         const newInvoice = generateChildInvoice(latestInvoice);
 
+        const created_by = req.user?.user_id || null; // from JWT middleware
         const {
             customer_name,
             email,
@@ -234,8 +241,8 @@ exports.updateLead = async (req, res) => {
             `INSERT INTO custleads
             (invoice_no, customer_name, email, mobile, alternate_contact,
              contact_person, address, agent_name, agent_contact,
-             agent_address, grand_total, bank_charge, remark, parent_lead_id, currency)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
+             agent_address, grand_total, bank_charge, remark, parent_lead_id, currency, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
             [
                 newInvoice,
                 customer_name,
@@ -251,7 +258,8 @@ exports.updateLead = async (req, res) => {
                 toNum(bank_charge),
                 remark,
                 originalLead.parent_lead_id || originalLead.id,
-                currency
+                currency,
+                created_by
             ]
         );
 

@@ -337,7 +337,7 @@ h2.react-datepicker__current-month { display: none !important; }
   width: 540px; height: 90%;
   background: var(--surface);
   border-radius: 12px;
-  padding: 50px 55px;
+  padding: 37px 55px;
   z-index: 2;
   box-shadow: 20px 0 40px rgba(0, 0, 0, 0.15);
 }
@@ -357,8 +357,11 @@ h2.react-datepicker__current-month { display: none !important; }
 
 .signup-card button {
   width: 100%; padding: 14px;
-  background: var(--color-ocean);
-  border: none; color: white; font-weight: 600; border-radius: 6px; cursor: pointer;
+  background: #ffffff;
+
+      font-size: 15px;
+    height: 50px;
+  border: 1px solid #bbbbbb; color: #181824; font-weight: 600;   border-radius: 25px; cursor: pointer;
 }
 
 .or-text { text-align: center; margin: 25px 0 15px; color: #888; }
@@ -518,6 +521,13 @@ h2.react-datepicker__current-month { display: none !important; }
 .quick-actions button:hover { background: rgba(255,255,255,.28); }
 
 .text-primary-new { color: var(--color-ocean) !important; }
+.usercontainer {
+    position: relative;
+    width: 1000px;
+    height: 100%;
+}
+
+
 @media only screen and (max-width:1440px){
   .signup-container {
     position: relative;
