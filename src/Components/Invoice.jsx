@@ -101,7 +101,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
   useEffect(() => {
     const fetchInvoiceData = async () => {
         try{
-           const res = await api.get(`/riya_dmclead/getInvoice/${id}`);
+           const res = await api.get(`/getInvoice/${id}`);
             setInvoiceData(res.data);
             // Set currency from saved lead data, default to USD
             if (res.data?.lead?.currency) {
@@ -176,18 +176,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
           <i className="fas fa-arrow-left"></i> Back
         </button>
         <div className="invoice-actions">
-           {/* <select 
-            className="currency-selector no-print selctCurrency" 
-            value={selectedCurrency} 
-            onChange={(e) => setSelectedCurrency(e.target.value)}
-            
-          >
-            <option value="USD">USD ($)</option>
-            <option value="THB">THB (฿)</option>
-            <option value="CAD">CAD (C$)</option>
-          
-          </select> */}
-          
+{/*            
           <select 
             className="currency-selector no-print selctCurrency" 
             value={selectedCurrency} 
@@ -197,7 +186,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
             <option value="THB">THB (฿)</option>
             <option value="CAD">CAD (C$)</option>
           </select>
-          
+           */}
           <button className="btn-download" onClick={handleDownloadPDF}>
             <i className="fas fa-download"></i> Download PDF
           </button>
@@ -211,6 +200,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
       <div className="invoice-content">
         {/* Header Section */}
         <div className="invoice-header-section">
+         <div>
           <div className="company-info">
             <div className="company-logo">
               {/* <img src="/logo-riya.png" alt="" /> */}
@@ -222,7 +212,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
               <p>THAILAND</p>
             </div>
           </div>
-
+          </div>
           <div className="invoice-meta">
             {/* <span className="paid-badge">PAID</span> */}
             <div className="invoice-number">
@@ -234,23 +224,35 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
           </div>
         </div>
 
+        
+
         {/* Business Details Section */}
         <div className="details-section">
           <div className="business-details">
             <h4>BUSINESS DETAILS</h4>
             <h3>RIYA TOURS & TRAVEL </h3>
-            <p>24th Floor, 968/58 ITF SILOM PALACE, SILOM ROAD,</p>
+            <p>24th Floor, 160/561 ITF SILOM PALACE, SILOM ROAD,</p>
             <p>SURIYAWONG, BANG RAK, BANGKOK 10500, THAILAND</p>
             <div className="tax-info">
               <span>TAX ID</span>
-              <span className="tax-number">0105561124505</span>
+              <span className="tax-number">0105566114929</span>
             </div>
           </div>
 
           <div className="agent-details">
             <h4>TRAVEL AGENT</h4>
-            <p className="agent-name">{lead.agent_name || "The Tourist"}</p>
+            <p className="agent-name">{lead.agent_name || " "}</p>
+             <p className="agent-sub">
+               {lead.agent_email || " "}
+            </p>
             <p className="agent-location">{lead.agent_address || ""}</p>
+             <p className="agent-sub">
+              {lead.agent_bookingref || " "}
+            </p>
+
+           
+             
+           
           </div>
         </div>
 
@@ -282,52 +284,180 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
         </div>
 
         {/* Items Table */}
-        <div className="invoice-table">
+         <div className="invoice-table">
           <table>
+            <colgroup>
+              <col style={{width:'10%'}} />
+              <col style={{width:'18%'}} />
+              <col style={{width:'13%'}} />
+              <col style={{width:'10%'}} />
+              <col style={{width:'7%'}} />
+              <col style={{width:'25%'}} />
+              
+              <col style={{width:'11%'}} />
+            </colgroup>
             <thead>
               <tr>
-                <th>SR NO</th>
-                <th>DESCRIPTION</th>
+                 <th>SR NO</th>
+                <th>Packages Type</th>
+                <th>Inclusions</th>
+                <th>Pax Type</th>
                 <th>QTY</th>
-                <th>PCS PAX</th>
-                <th>TOTAL USD</th>
+                <th className="text-center">Per Pax</th>
+                 
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
-              {/* Package Items */}
-              <tr className="package-header">
-                <td>01</td>
-                <td colSpan="2" style={{textAlign:'left !important'}}>
-                  <strong>PACKAGE NAME (LAND)</strong>
-                </td>
-                <td colSpan="2"></td>
-              </tr>
+              {itineraries.map((item, index) => {
+                // Build pax rows — same logic as New-lead form
+                const paxRows = [];
+                if (Number(item.adult_count) > 0) {
+                  paxRows.push({
+                    type: 'Adult',
+                    qty: item.adult_count,
+                    perPax: (Number(item.adult_total || 0) / Number(item.adult_count)).toFixed(2),
+                    total: Number(item.adult_total || 0).toFixed(2),
+                    remark: item.adult_remark || '',
+                  });
+                }
+                if (Number(item.child_count) > 0) {
+                  paxRows.push({
+                    type: 'Child',
+                    qty: item.child_count,
+                    perPax: (Number(item.child_total || 0) / Number(item.child_count)).toFixed(2),
+                    total: Number(item.child_total || 0).toFixed(2),
+                    remark: item.child_remark || '',
+                  });
+                }
+                if (Number(item.infant_count) > 0) {
+                  paxRows.push({
+                    type: 'Infant',
+                    qty: item.infant_count,
+                    perPax: (Number(item.infant_total || 0) / Number(item.infant_count)).toFixed(2),
+                    total: Number(item.infant_total || 0).toFixed(2),
+                    remark: item.infant_remark || '',
+                  });
+                }
+                // Fallback: pkgamount / no individual pax prices
+                if (paxRows.length === 0) {
+                  const totalPax = Number(item.adult_count || 0) + Number(item.child_count || 0) + Number(item.infant_count || 0);
+                  paxRows.push({
+                    type: 'All Pax',
+                    qty: totalPax,
+                    perPax: totalPax > 0 ? (Number(item.total || 0) / totalPax).toFixed(2) : '0.00',
+                    total: Number(item.total || 0).toFixed(2),
+                    remark: '',
+                  });
+                }
 
-              {itineraries.map((item, index) => (
-                <tr key={index} className="package-item">
-                  <td></td>
-                  <td className="item-description">
-                    <i className="fas fa-circle item-bullet"></i>
-                    {item.package_type}
-                  </td>
-                  <td>{item.adult_count + item.child_count + item.infant_count}</td>
-                  <td>{(() => { const qty = item.adult_count + item.child_count + item.infant_count; return qty > 0 ? `${getCurrencySymbol()} ${convertAmount(item.total / qty)}` : '-'; })()}</td>
-                  <td>{getCurrencySymbol()}{convertAmount(item.total)}</td>
-                </tr>
-              ))}
+                return paxRows.map((pax, paxIndex) => (
+                  <tr className="package-item" key={`${index}-${paxIndex}`}>
+                    <td className="sr-cell">{paxIndex === 0 ? String(index + 1).padStart(2, '0') : ''}</td>
+                    <td className="pkg-name-cell">{paxIndex === 0 ? item.package_type : ''}</td>
+                    <td className="pax-cell">{paxIndex === 0 ? (item.inclusions || '-') : ''}</td>
+                    <td className="pax-cell">{pax.type}</td>
+                    <td className="pax-cell">{pax.qty}</td>
+                    <td className="pax-cell">
+                      <>
+                     <div> {getCurrencySymbol()} {pax.perPax}</div>
+                     <div className="sub-text">{pax.remark}</div>
+                      </>
+                    </td>
+                  
+                    <td className="total-cell"><strong>{getCurrencySymbol()} {pax.total}</strong></td>
+                  </tr>
+                ));
+              })}
 
-              {/* Bank Charges */}
-              <tr className="package-header">
-                <td>02 </td>
-                <td> <strong>Bank Charges</strong>  <span className="item-subtitle">Processing Fee</span>
-                </td>
-                 <td>1</td>
-                <td>{getCurrencySymbol()}{convertAmount(lead.bank_charge || 0)}</td>
-                <td>{getCurrencySymbol()}{convertAmount(lead.bank_charge || 0)}</td>
+              {/* Bank Charges Row */}
+              <tr className="bank-charges-row">
+                <td className="sr-cell">{String(itineraries.length + 1).padStart(2, '0')}</td>
+                <td className="pkg-name-cell">Bank Charges</td>
+                <td className="pax-cell" colSpan="4"><span className="item-subtitle">Processing Fee</span></td>
+                <td className="total-cell">{getCurrencySymbol()}{convertAmount(lead.bank_charge || 0)}</td>
               </tr>
-              
             </tbody>
-          </table>
+          </table> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+                {/* <React.Fragment key={index}>
+                
+                  <tr className="package-header">
+                    <td className="sr-cell">{String(index + 1).padStart(2, '0')}</td>
+                    <td colSpan="5" className="pkg-name-cell">
+                      {item.package_type} 
+                    </td>
+                  </tr>
+ 
+                  
+                  <tr className="package-item">
+                    <td></td>
+                    <td  >
+                       
+                    </td>
+                    <td className="pax-cell">
+                      {item.adult_count > 0 && (
+                        <>
+                          <div>{getCurrencySymbol()} {convertAmount(item.adult_total)} ({item.adult_count} - A)</div>
+                          <div className="sub-text">{item.adult_remark || ""}</div>
+                        </>
+                      )}
+                    </td>
+                    <td className="pax-cell">
+                      {item.child_count > 0 && (
+                        <>
+                          <div>{getCurrencySymbol()} {convertAmount(item.child_total)} ({item.child_count} - C)</div>
+                          <div className="sub-text">{item.child_remark || ""}</div>
+                        </>
+                      )}
+                    </td>
+                    <td className="pax-cell">
+                      {item.infant_count > 0 && (
+                        <>
+                          <div>{getCurrencySymbol()} {convertAmount(item.infant_total)} ({item.infant_count} - I)</div>
+                          <div className="sub-text">{item.infant_remark || ""}</div>
+                        </>
+                      )}
+                    </td>
+                    <td className="total-cell">
+                      <strong>{getCurrencySymbol()}{convertAmount(item.total)}</strong>
+                    </td>
+                  </tr>
+                </React.Fragment>
+              ))}
+ 
+             
+              <tr className="bank-charges-row">
+                <td className="sr-cell">{String(itineraries.length + 1).padStart(2, '0')}</td>
+                <td className="pkg-name-cell">
+                  Bank Charges 
+                 
+                </td>
+                <td className="pax-cell"> <span className="item-subtitle"> Processing Fee</span></td>
+                <td className="pax-cell"> </td>
+                <td className="pax-cell"></td>
+                <td className="total-cell"> {getCurrencySymbol()}{convertAmount(lead.bank_charge || 0)} </td>
+              </tr>
+            </tbody>
+          </table> */}
+          {lead.remark && (
+            <div className="remark-section">
+              <span className="remark-label">Remark:</span>
+              <span className="remark-text">{lead.remark}</span>
+            </div>
+          )}
         </div>
 
         {/* Banking Information & Total */}
@@ -343,7 +473,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
               </div>
               <div className="bank-item">
                 <span className="bank-label">CURRENT A/C NO</span>
-                <span className="bank-value">153 - 1 - 30036 - 3</span>
+                <span className="bank-value">163 - 1 - 30036 - 3</span>
               </div>
               <div className="bank-item">
                 <span className="bank-label">BANK / BRANCH</span>

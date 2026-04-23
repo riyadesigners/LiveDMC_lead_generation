@@ -21,9 +21,16 @@ const LeadForm = () => {
   const [packageType, setPackageType] = useState("");
   const [pkgamount, setPkgAmount] = useState("")
   const [inclusion, setInclusion] = useState("");
+ 
   const [itineraries, setItineraries] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null); // null = add mode, number = edit mode (in-place)
  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [currencyRates, setCurrencyRates] = useState({});
+const [agentEmail, setAgentEmail]           = useState("");
+const [agentBookingRef, setAgentBookingRef] = useState("");
+const [adultRemarks, setAdultRemarks]       = useState("");
+const [childRemarks, setChildRemarks]       = useState("");
+const [infantRemarks, setInfantRemarks]     = useState("");
 
    const [formData, setFormData] = useState({
     invoice_no: "",
@@ -39,6 +46,9 @@ const LeadForm = () => {
     adult_price: "",
     child_price: "",
     infant_price: "",
+    adultRemarks: "",
+    childRemarks: "",
+    infantRemarks: "",
     bank_charge: "",
     remark: "",
   });
@@ -53,54 +63,7 @@ const LeadForm = () => {
     return `${parentInvoice}-v2`;
   };
 
-  // useEffect(()=>{
-  //   if(!id) return;
-  //   const fetchLead = async () =>{
-  //     try{
-  //       const res = await api.get(`/riya_dmclead/getInvoice/${id}`);
-  //       const {lead, itineraries: existingItineraries } = res.data;
-  //       setFormData({
-  //         invoice_no:     generateChildInvoice(lead.invoice_no),
-  //         customer_name: lead.customer_name || "",
-  //         custemail: lead.email || "",
-  //         custmobile : lead.mobile || "",
-  //         alternateno : lead.alternate_contact || "",
-  //         contact_person : lead.contact_person || "",
-  //         custaddress : lead.address || "",
-  //         bank_charge : lead.bank_charge || "",
-  //         remark: lead.remark || "",
-
-  //         adult: 0, child: 0, infant:0,
-  //         adult_price:"", child_price:"", infant_price:""
-  //       });
-  //       setAgentName(lead.agent_name || "");
-  //       setAgentContact(lead.agent_contact || "");
-  //       setAgentAddress(lead.agent_address || "");
-
-  //       setItineraries(existingItineraries.map(it => ({
-  //         packageType: it.package_type,
-  //         inclusion:   it.inclusions,
-  //         adultCount:  it.adult_count,
-  //         childCount:  it.child_count,
-  //         infantCount: it.infant_count,
-  //         adultTotal:  it.adult_total,
-  //         childTotal:  it.child_total,
-  //         infantTotal: it.infant_total,
-  //         total:       it.total,
-  //       })));
-  //     }
-  //     catch(err){
-  //       console.error("Failed to fetch lead for editing:", err);
-  //       alert("Could not load lead data. Please try again.");
-  //     }
-  //   }
-  //   fetchLead();
-  // }, [id]);
-
-//    const convertAmount = (amount) => {
-//   const rate = currencyRates?.[selectedCurrency]?.rate ?? 1;
-//   return (parseFloat(amount || 0) * rate).toFixed(2);
-// };
+   
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -115,7 +78,7 @@ useEffect(() => {
     if (!id) return;
     const fetchLeadById = async () => {
       try {
-        const res = await api.get(`/riya_dmclead/getInvoice/${id}`);
+        const res = await api.get(`/getInvoice/${id}`);
         const { lead, itineraries: existingItineraries } = res.data;
 
         // Map backend field names to formData keys
@@ -131,12 +94,16 @@ useEffect(() => {
           remark:         lead.remark            || "",
           adult: 0, child: 0, infant: 0,
           adult_price: "", child_price: "", infant_price: "",
+          adultRemarks: "", childRemarks: "", infantRemarks: "",
         });
 
         // Agent fields are separate state variables
         setAgentName(lead.agent_name     || "");
         setAgentContact(lead.agent_contact || "");
         setAgentAddress(lead.agent_address || "");
+         setAgentBookingRef(lead.agent_bookingref || "");
+        setAgentEmail(lead.agent_email || "");
+        
 
         // Populate itineraries table
         setItineraries(existingItineraries.map(it => ({
@@ -147,8 +114,11 @@ useEffect(() => {
           childCount:  it.child_count,
           infantCount: it.infant_count,
           adultTotal:  it.adult_total,
+          adultRemarks: it.adult_remark,
           childTotal:  it.child_total,
+          childRemarks: it.child_remark,
           infantTotal: it.infant_total,
+          infantRemarks: it.infant_remark,
           totalUSD: it.total,
           currency: selectedCurrency   
         })));
@@ -180,7 +150,7 @@ useEffect(() => {
     if (!editId) return;
     const fetchForEdit = async () => {
       try {
-        const res = await api.get(`/riya_dmclead/getInvoice/${editId}`);
+        const res = await api.get(`/getInvoice/${editId}`);
         const { lead, itineraries: existingItineraries } = res.data;
 
         setFormData({
@@ -195,11 +165,14 @@ useEffect(() => {
           remark:         lead.remark            || "",
           adult: 0, child: 0, infant: 0,
           adult_price: "", child_price: "", infant_price: "",
+          adultRemarks: "", childRemarks: "", infantRemarks: "",
         });
 
         setAgentName(lead.agent_name     || "");
         setAgentContact(lead.agent_contact || "");
         setAgentAddress(lead.agent_address || "");
+        setAgentEmail(lead.agent_email || "");
+        setAgentBookingRef(lead.agent_bookingref || "");
 
         setItineraries(existingItineraries.map(it => ({
           packageType: it.package_type,
@@ -209,8 +182,11 @@ useEffect(() => {
           childCount:  it.child_count,
           infantCount: it.infant_count,
           adultTotal:  it.adult_total,
+          adultRemarks: it.adult_remark || "",
           childTotal:  it.child_total,
+          childRemarks: it.child_remark || "",
           infantTotal: it.infant_total,
+          infantRemarks: it.infant_remark || "",
           totalUSD: it.total,   
           currency: selectedCurrency   
         })));
@@ -239,18 +215,31 @@ useEffect(() => {
       childCount: formData.child,
       infantCount: formData.infant,
       adultTotal,
-      childTotal,
-      infantTotal,
+      adultRemarks,
+       childTotal,
+       childRemarks,
+       infantTotal,
+       infantRemarks,
+ 
       totalUSD: finalTotal,
       currency: selectedCurrency 
     };
    
-    setItineraries([...itineraries, newItem]);
+    if (editingIndex !== null) {
+      // In-place replace: swap the row at editingIndex with updated data
+      setItineraries(itineraries.map((it, i) => i === editingIndex ? newItem : it));
+      setEditingIndex(null);
+    } else {
+      setItineraries([...itineraries, newItem]);
+    }
 
     // Reset fields
     setPackageType("");
     setPkgAmount("");
     setInclusion("");
+    setAdultRemarks("");
+    setChildRemarks("");
+    setInfantRemarks("");
     setFormData((prev) => ({
       ...prev,
       adult: 0, child: 0, infant: 0,
@@ -273,7 +262,7 @@ useEffect(() => {
   const checkInvoiceExists = async (invoiceNo) => {
     if (!invoiceNo || !invoiceNo.trim()) return false;
     try {
-      const response = await api.get(`/riya_dmclead/checkInvoice/${invoiceNo}`);
+      const response = await api.get(`/checkInvoice/${invoiceNo}`);
       return response.data.exists;
     } catch (error) {
       console.error("Error checking invoice:", error);
@@ -299,13 +288,19 @@ useEffect(() => {
     if (!formData.customer_name || !formData.customer_name?.trim()) {
       newErrors.customer_name = "Customer name is required";
     }
-    if (!formData.custemail?.trim()) newErrors.custemail = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.custemail))
-      newErrors.custemail = "Invalid email";
+   
+    if (formData.custemail?.trim() && 
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.custemail)) {
+        newErrors.custemail = "Invalid email";
+    }
 
-    // if (!formData.custmobile?.trim())
-    //   newErrors.custmobile = "Mobile number is required";
-
+    
+    if (!agentEmail?.trim()) {
+        newErrors.agentEmail = "Agent email is required";
+    } 
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(agentEmail)) {
+        newErrors.agentEmail = "Invalid agent email";
+    }
     // if (formData.adult < 1) newErrors.adult = "At least 1 adult is required";
 
     setErrors(newErrors);
@@ -330,24 +325,29 @@ useEffect(() => {
       address:          formData.custaddress,
       agent_name:       agentName,
       agent_contact:    agentContact,
+      agent_email:     agentEmail,
       agent_address:    agentAddress,
+      agent_bookingRef:  agentBookingRef,
       bank_charge:      formData.bank_charge,
       remark:           formData.remark,
       grand_total:      grandTotalUSD,
       currency: selectedCurrency,
       itineraries,
       adult:            formData.adult,
+      adultRemarks:     adultRemarks,
       child:            formData.child,
+      childRemarks:     childRemarks,
       infant:           formData.infant,
+      infantRemarks: infantRemarks,
       parent_lead_id:   isChildMode ? Number(id) : null,   
     };
 
     try {
       if (isEditMode) {
-        await api.put(`/riya_dmclead/updateLead/${editId}`, payload);
+        await api.put(`/updateLead/${editId}`, payload);
         alert("Lead updated successfully!");
       } else {
-        await api.post("/riya_dmclead/createLead", payload);
+        await api.post("/createLead", payload);
         alert(isChildMode ? "New version created successfully!" : "Lead saved successfully!");
       }
       navigate("/Leadlist");
@@ -455,7 +455,7 @@ useEffect(() => {
                 </div>
 
                 <div className="form-group">
-                  <label>Email Address *</label>
+                  <label>Email Address </label>
                   <input
                     placeholder="Enter Email Address"
                     className="form-control modern-input"
@@ -538,6 +538,19 @@ useEffect(() => {
                     onChange={(e) => setAgentContact(e.target.value)}
                   />
                 </div>
+                  <div className="form-group">
+                  <label>Agent Email Address </label>
+                  <input
+                    placeholder="Enter Agent Email Address"
+                    className="form-control modern-input"
+                   value={agentEmail}
+                    name="agentEmail"
+                    onChange={(e) => setAgentEmail(e.target.value)}
+                  />
+                  {errors.agentEmail && (
+                    <small className="text-danger">{errors.agentEmail}</small>
+                  )}
+                </div>
                 <div className="form-group">
                   <label>Agent Address</label>
                   <input
@@ -546,6 +559,16 @@ useEffect(() => {
                     value={agentAddress}
                     name="agentAddress"
                     onChange={(e) => setAgentAddress(e.target.value)}
+                  />
+                </div>
+                 <div className="form-group  ">
+                  <label>Agent Booking Ref No </label>
+                  <input
+                    placeholder="Enter Booking Ref No If Any"
+                    className="form-control modern-input"
+                    value={agentBookingRef}
+                    name="agentBookingRef"
+                    onChange={(e) => setAgentBookingRef(e.target.value)}
                   />
                 </div>
               </div>
@@ -607,7 +630,17 @@ useEffect(() => {
                   </div>
                   {errors.adult && <small className="text-danger">{errors.adult}</small>}
                 </div>
-
+                    <div className="form-group full2">
+                   
+                  <div className="inline-input">
+                    <input
+                      className="form-control modern-input"
+                      placeholder="Enter Any Remarks for Adult (Optional)"
+                      value={adultRemarks}
+                      onChange={(e) => setAdultRemarks(e.target.value)}
+                    />
+                  </div>
+                </div>   
                 <div className="form-group">
                   <div className="passenger-box">
                     <PassengerCounter
@@ -626,7 +659,17 @@ useEffect(() => {
                     />
                   </div>
                 </div>
-
+                <div className="form-group full2">
+                   
+                  <div className="inline-input">
+                    <input
+                      className="form-control modern-input"
+                      placeholder="Enter Any Remarks for Child (Optional)"
+                      value={childRemarks}
+                      onChange={(e) => setChildRemarks(e.target.value)}
+                    />
+                  </div>
+                </div>   
                 <div className="form-group">
                   <div className="passenger-box">
                     <PassengerCounter
@@ -645,6 +688,17 @@ useEffect(() => {
                     />
                   </div>
                 </div>
+                 <div className="form-group full2">
+                   
+                  <div className="inline-input">
+                    <input
+                      className="form-control modern-input"
+                      placeholder="Enter Any Remarks for Infant (Optional)"
+                      value={infantRemarks}
+                      onChange={(e) => setInfantRemarks(e.target.value)}
+                    />
+                  </div>
+                </div>   
                   <div className="form-group">
                     <label>Select Currency</label>
                     <select className="form-select currency-selector no-print selctCurrency modern-input" 
@@ -665,62 +719,169 @@ useEffect(() => {
                     className="btn btn-success btn-add"
                     onClick={handleAddItinerary}
                   >
-                    <i className="fas fa-plus" aria-hidden="true"></i> Add Package
+                    <i className="fas fa-plus" aria-hidden="true"></i> {editingIndex !== null ? "Update Package" : "Add Package"}
                   </button>
                 </div>
               </div>
 
               {/* TABLE */}
               <h4 className="sub-title">Itinerary Details</h4>
-              <div className="table-wrapper">
+              <div className="table-wrapper mt-4">
                 <table>
                   <thead>
                     <tr>
                       <th>Sr. No</th>
                       <th>Packages Type</th>
                       <th>Inclusions</th>
-                      <th>Per Pax (Adult)</th>
-                      <th>Per Pax (Child)</th>
-                      <th>Per Pax (Infant)</th>
-                      <th>Total USD</th>
+                      <th>Pax Type</th>
+                      <th>Remark</th>
+                      <th>QTY</th>
+                      <th>Per Pax</th>
+                      
+                      <th>Total</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {itineraries.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="empty-row"></td>
+                        <td colSpan="9" className="empty-row"></td>
                       </tr>
                     ) : (
-                      itineraries.map((item, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{item.packageType}</td>
-                          <td>{item.inclusion || "-"}</td>
-                          <td>{item.adultCount  > 0 ? `${item.adultTotal} (${item.adultCount} Adult)`    : 0}</td>
-                          <td>{item.childCount  > 0 ? `${item.childTotal} (${item.childCount} Child)`    : 0}</td>
-                          <td>{item.infantCount > 0 ? `${item.infantTotal} (${item.infantCount} Infant)` : 0}</td>
-                          <td>  {getCurrencySymbol()} {Number(item.totalUSD || 0).toFixed(2)}</td>
-                          <td>
-                            <button
-                              className="btn-delete"
-                              type="button"
-                              onClick={() => setItineraries(itineraries.filter((_, i) => i !== index))}
-                            >
-                              <i className="fas fa-trash" aria-hidden="true"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      itineraries.map((item, index) => {
+                        
+                        const paxRows = [];
+                        if (item.adultCount > 0) {
+                          paxRows.push({
+                            type: "Adult",
+                            qty: item.adultCount,
+                            perPax: item.adultCount > 0 ? (Number(item.adultTotal || 0) / Number(item.adultCount)).toFixed(2) : 0,
+                            total: Number(item.adultTotal || 0).toFixed(2),
+                            remarks: item.adultRemarks,
+                          });
+                        }
+                        if (item.childCount > 0) {
+                          paxRows.push({
+                            type: "Child",
+                            qty: item.childCount,
+                            perPax: item.childCount > 0 ? (Number(item.childTotal || 0) / Number(item.childCount)).toFixed(2) : 0,
+                            total: Number(item.childTotal || 0).toFixed(2),
+                            remarks: item.childRemarks,
+                          });
+                        }
+                        if (item.infantCount > 0) {
+                          paxRows.push({
+                            type: "Infant",
+                            qty: item.infantCount,
+                            perPax: item.infantCount > 0 ? (Number(item.infantTotal || 0) / Number(item.infantCount)).toFixed(2) : 0,
+                            total: Number(item.infantTotal || 0).toFixed(2),
+                            remarks: item.infantRemarks,
+                          });
+                        }
+                        // If pkgamount was used (no individual pax prices), show one combined row
+                        if (paxRows.length === 0) {
+                          const totalPax = Number(item.adultCount || 0) + Number(item.childCount || 0) + Number(item.infantCount || 0);
+                          paxRows.push({
+                            type: "All Pax",
+                            qty: totalPax,
+                            perPax: totalPax > 0 ? (Number(item.totalUSD || 0) / totalPax).toFixed(2) : 0,
+                            total: Number(item.totalUSD || 0).toFixed(2),
+                            remarks: "",
+                          });
+                        }
+
+                        return paxRows.map((pax, paxIndex) => (
+                          <tr
+                            key={`${index}-${paxIndex}`}
+                            style={editingIndex === index ? { background: "#fffbe6", outline: "2px solid #f59e0b" } : {}}
+                          >
+                            <td>{paxIndex === 0 ? index + 1 : ""}</td>
+                            <td>{paxIndex === 0 ? item.packageType : ""}</td>
+                            <td>{paxIndex === 0 ? (item.inclusion || "-") : ""}</td>
+                           
+                            <td>{pax.type}</td>
+                            <td>{pax.remarks && (
+                                <span style={{ display: "block", fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                  {pax.remarks}
+                                </span>
+                              )}</td>
+                             <td>{pax.qty}</td>
+                              <td>
+                              {getCurrencySymbol()} {pax.perPax}
+                            </td>
+                            
+                           
+                            <td>{getCurrencySymbol()} {pax.total}</td>
+                            <td>
+                              {/* Edit button on every pax row; Delete only on first */}
+                              <div style={{ display: "flex", gap: "6px" }}>
+
+
+                                
+                               <i
+  className="fas fa-pen edit"
+  title="Edit" 
+  style={{ cursor: "pointer", marginRight: "10px", color: "#8fbb9a"   }}
+  onClick={() => {
+    // Bind itinerary data back to input fields
+    setPackageType(item.packageType || "");
+    setPkgAmount(item.pkgamount || "");
+    setInclusion(item.inclusion || "");
+    setAdultRemarks(item.adultRemarks || "");
+    setChildRemarks(item.childRemarks || "");
+    setInfantRemarks(item.infantRemarks || "");
+
+    setFormData((prev) => ({
+      ...prev,
+      adult: item.adultCount || 0,
+      child: item.childCount || 0,
+      infant: item.infantCount || 0,
+      adult_price:
+        item.adultCount > 0
+          ? (Number(item.adultTotal || 0) / Number(item.adultCount)).toFixed(0)
+          : "",
+      child_price:
+        item.childCount > 0
+          ? (Number(item.childTotal || 0) / Number(item.childCount)).toFixed(0)
+          : "",
+      infant_price:
+        item.infantCount > 0
+          ? (Number(item.infantTotal || 0) / Number(item.infantCount)).toFixed(0)
+          : "",
+    }));
+
+    setSelectedCurrency(item.currency || "USD");
+
+    // Mark this index as being edited
+    setEditingIndex(index);
+  }}
+></i>
+
+{paxIndex === 0 && (
+  <i
+    className="fas fa-trash delete"
+    title="Delete"
+    style={{ cursor: "pointer", color:"#d95c5c" }}
+    onClick={() => {
+      setItineraries(itineraries.filter((_, i) => i !== index));
+      if (editingIndex === index) setEditingIndex(null);
+    }}
+  ></i>
+)}
+                              </div>
+                            </td>
+                          </tr>
+                        ));
+                      })
                     )}
                   </tbody>
                   {itineraries.length > 0 && (
                     <tfoot>
                       <tr>
-                        <td colSpan="6" style={{ textAlign: "right", fontWeight: "bold" }}>
+                        <td colSpan="7" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Grand Total
                         </td>
-                        <td style={{ fontWeight: "bold" }}> {getCurrencySymbol()} {Number(grandTotalUSD || 0).toFixed(2)}</td>
+                        <td style={{ fontWeight: "bold" }}>{getCurrencySymbol()} {Number(grandTotalUSD || 0).toFixed(2)}</td>
                         <td></td>
                       </tr>
                     </tfoot>

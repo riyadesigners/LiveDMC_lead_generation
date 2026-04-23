@@ -115,7 +115,7 @@ const handleSubmit = async (e) => {
 
     setLoading(true);
     try {
-      const res = await api.post('/riya_dmclead/add-user', {
+      const res = await api.post('/add-user', {
         username: values.username.trim(),
         email: values.email.trim(),
         password: values.password,

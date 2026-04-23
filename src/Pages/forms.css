@@ -562,3 +562,8 @@ h2.react-datepicker__current-month { display: none !important; }
   width:65%;
 }
 }
+
+
+.form-group.full2 {
+    grid-column: span 2;
+}

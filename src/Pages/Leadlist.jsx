@@ -32,7 +32,7 @@ const filteredLeads =
 useEffect(() => {
   const fetchLeads = async () => {
     try {
-      const res = await api.get("/riya_dmclead/getLeadList"); // MUST MATCH BACKEND
+      const res = await api.get("/getLeadList"); // MUST MATCH BACKEND
       setLeads(res.data);
     } catch (err) {
       console.error("Failed to fetch leads", err);
@@ -166,9 +166,9 @@ const parentLeads = leads.filter(l => !l.parent_lead_id);
 const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
       try {
-        await api.delete(`/riya_dmclead/deleteLead/${id}`);
+        await api.delete(`/deleteLead/${id}`);
         alert("Lead deleted successfully");
-        setLeads(prev => prev.filter(l => l.id !== id));  // ✅ filter locally, no re-fetch
+        setLeads(prev => prev.filter(l => l.id !== id));   
       } catch (err) {
         console.error("Failed to delete lead", err);
         alert("Failed to delete lead. Please try again.");

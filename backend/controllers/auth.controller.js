@@ -6,7 +6,7 @@ const pool = require("../config/db");
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log("📩 Login attempt:", email, password); // ← ADD
+  console.log(" Login attempt:", email, password);  
 
   try {
     if (!email || !password) {
@@ -18,17 +18,15 @@ exports.login = async (req, res) => {
       [email.trim()]
     );
 
-    // console.log("  DB rows found:", result.rows.length); // ← ADD
-    // console.log("  DB user:", result.rows[0]); // ← ADD
-
+ 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    
-    console.log(" Password match:", isMatch); // ← ADD
+
+    console.log(" Password match:", isMatch); 
 
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -39,20 +37,22 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-
+console.log(" JWT token generated for user:", user.username, "with role:", user.roleuser);
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      
-       sameSite: "Strict",
-      //sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000,
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+        // secure: true,
+        //sameSite: "Strict",
+        sameSite: "None",
+        maxAge: 24 * 60 * 60 * 1000,
     });
 
+ 
     res.json({
       message: "Login Successful",
       username: user.username,
-     // role: user.roleuser,
+      role: user.roleuser,
+      user_id: user.user_id,
     });
 
   } catch (err) {
@@ -64,22 +64,22 @@ exports.login = async (req, res) => {
 // ─── ADD USER ────
 exports.addUser = async (req, res) => {
   const { username, email, password, role } = req.body;
-  try{
-    if(!username || !email || !password || !role){
-      return res.status(400).json({error:"All Fields are required"});
+  try {
+    if (!username || !email || !password || !role) {
+      return res.status(400).json({ error: "All Fields are required" });
     }
     //validate
     const allowedRoles = ["user", "admin", "superadmin"];
-    if(!allowedRoles.includes(role)){
-      return res.status(400).json({error: "Invalid role specified"});
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: "Invalid role specified" });
     }
     //Check duplicate email
     const existingUsername = await pool.query(
-      "SELECT user_id FROM user_auth WHERE LOWER(username) = LOWER($1)",[username.trim()]
+      "SELECT user_id FROM user_auth WHERE LOWER(username) = LOWER($1)", [username.trim()]
     );
 
-    if(existingUsername.rows.length > 0){
-      return res.status(409).json({error: "Username already taken"});
+    if (existingUsername.rows.length > 0) {
+      return res.status(409).json({ error: "Username already taken" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const insertResult = await pool.query(
@@ -105,6 +105,70 @@ exports.addUser = async (req, res) => {
     console.error("Add user error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
+};
+
+exports.LoginWithJWTToken = async (req, res) => {
+
+  const { token } = req.body;
+
+  console.log(" Login with token attempt:", token);  
+
+  try {
+
+    if (!token) {
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    try {
+      const verified = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("inside login method");
+      const result = await pool.query(
+        "SELECT user_id,username,roleuser FROM user_auth WHERE emp_code = $1",
+        [verified.emp_code]
+      );
+      console.log(verified.emp_code);
+      if (result.rows.length === 0) {
+        return res.status(401).json({ error: "Invalid Token1" });
+      }
+      console.log("result:", result);
+      const user = result.rows[0];
+      console.log("res:", user);
+      const tokenNew = jwt.sign(
+        { user_id: user.user_id, role: user.roleuser },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+      console.log(" JWT token generated for user:", user.username, "with role user:", user.roleuser);
+      res.cookie("token", tokenNew, {
+        httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+        // secure: true,
+        //sameSite: "Strict",
+        sameSite: "None",
+        maxAge: 24 * 60 * 60 * 1000,
+        
+      });
+      
+      
+      res.json({
+        message: "Login Successful",
+        username: user.username,
+        role: user.roleuser,
+        user_id: user.user_id,
+      });
+      console.log("Login with token successful for user:", user.username, user.roleuser);
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid Token2 " + err.message });
+    }
+
+  }
+  catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+
+  }
+
 };
 
 

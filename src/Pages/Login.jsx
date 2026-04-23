@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import logo from '../assets/riya-logo.png';
 import api from '../api/axiosInstance';
 
+
 const Toast = ({ message, isSuccess, show, onClose }) => {
   useEffect(() => {
     if (show) {
@@ -29,7 +30,6 @@ const Toast = ({ message, isSuccess, show, onClose }) => {
           opacity: show ? 1 : 0,
         }}
       >
-        {/* Colored top bar */}
         <div
           style={{
             height: '4px',
@@ -51,7 +51,7 @@ const Toast = ({ message, isSuccess, show, onClose }) => {
               flexShrink: 0,
             }}
           >
-            {isSuccess ? '✓' : '✕'}
+            {isSuccess ? 'OK' : 'X'}
           </span>
 
           <strong className={`mr-auto ${isSuccess ? 'text-success' : 'text-danger'}`}>
@@ -100,6 +100,44 @@ const Login = () => {
     setToast(prev => ({ ...prev, show: false }));
   };
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get('token');
+
+    if (!token) return;
+
+    const loginWithToken = async () => {
+      // alert("Login with token attempt: " + token); 
+      try {
+        const res = await api.post("/LoginWithJWTToken", {
+            token
+          }, {
+            withCredentials: true
+          });
+        console.log("Role new:", res.data.role);
+      //     const authRes = await api.get("/check-auth", {
+      //    withCredentials: true
+      //  });
+        localStorage.setItem("riya_user", JSON.stringify({
+           username: res.data.username,
+            role: res.data.role,
+            user_id: res.data.user_id,
+        }));
+        console.log("Auth check response:", res.data.role);
+        showToast("Login Successful!", true);
+        setTimeout(() => navigate("/dashboard"), 1000);
+      } catch (err) {
+        const message = err.response?.data?.error || "Login failed. Try again.";
+        showToast(message, false);
+      }
+    };
+
+    if (process.env.NODE_ENV === "production") {
+      loginWithToken();
+    }
+
+  }, [navigate]);
+
   const [values, setValues] = useState({
     email: '',
     password: '',
@@ -112,7 +150,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic client-side validation
     const newErrors = {};
     if (!values.email.trim()) newErrors.email = 'Email is required';
     if (!values.password) newErrors.password = 'Password is required';
@@ -123,26 +160,36 @@ const Login = () => {
     setErrors({});
 
     try {
-      const res = await api.post("/riya_dmclead/login", {
+      const res = await api.post("/login", {
+        withCredentials: true,
         email: values.email,
         password: values.password,
+        role: values.role,
       });
+console.log("Role:", res.data.role);
+      //  const authRes = await api.get("/check-auth", {
+      //    withCredentials: true
+      //  });
 
-      const authRes = await api.get("/riya_dmclead/check-auth");
-      // Store user info (NOT sensitive data — token is in httpOnly cookie)
       localStorage.setItem("riya_user", JSON.stringify({
         username: res.data.username,
-        role: authRes.data.role,
+        role: res.data.role,
+        user_id: res.data.user_id,
       }));
-
+      
       showToast("Login Successful!", true);
+      console.log("Auth check response:", res.data.role);
       setTimeout(() => navigate("/dashboard"), 1000);
-
     } catch (err) {
       const message = err.response?.data?.error || "Login failed. Try again.";
       showToast(message, false);
     }
   };
+
+  if (process.env.NODE_ENV === "production") {
+
+    return;
+  }
 
   return (
     <>
@@ -157,22 +204,20 @@ const Login = () => {
         <img
           src={logo}
           alt="Logo"
-          className='img-fluid'
+          className="img-fluid"
           style={{ position: 'absolute', top: '0px', margin: '0 auto' }}
         />
         <div className="signup-container">
-
-          {/* LEFT CARD */}
           <div className="signup-card">
             <div className="p-4 logincard">
               <h3 className="text-center">Login</h3>
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor='email' className='text-left'>Email</label>
+                  <label htmlFor="email" className="text-left">Email</label>
                   <input
-                    type='email'
-                    id='email'
-                    name='email'
+                    type="email"
+                    id="email"
+                    name="email"
                     value={values.email}
                     onChange={handleInput}
                     className={`form-control ${errors.email ? 'is-invalid' : ''}`}
@@ -182,11 +227,11 @@ const Login = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor='password'>Password</label>
+                  <label htmlFor="password">Password</label>
                   <input
-                    type='password'
-                    id='password'
-                    name='password'
+                    type="password"
+                    id="password"
+                    name="password"
                     value={values.password}
                     onChange={handleInput}
                     className={`form-control ${errors.password ? 'is-invalid' : ''}`}
@@ -206,9 +251,7 @@ const Login = () => {
             </div>
           </div>
 
-          {/* RIGHT IMAGE */}
           <div className="signup-image"></div>
-
         </div>
       </div>
     </>

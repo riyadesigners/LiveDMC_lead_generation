@@ -12,7 +12,7 @@ const Topbar = ({ onToggleSidebar }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("riya_user");
-    window.location.href = "/login";
+    window.location.href = "/entities";
   };
 
   // Close notification dropdown when clicking outside
@@ -40,7 +40,7 @@ const Topbar = ({ onToggleSidebar }) => {
       </div>
 
       <div className="topbar-right" ref={notificationRef}>
-        {/* 🔔 Notification */}
+         
         <button
           className="icon-btn"
           onClick={() => setShowNotifications(!showNotifications)}
@@ -49,14 +49,14 @@ const Topbar = ({ onToggleSidebar }) => {
           <span className="notification-dot"></span>
         </button>
 
-        {/* 🔽 Notification Dropdown */}
+        
         {showNotifications && (
           <div className="notification-dropdown">
             <h6>Notifications</h6>
             <ul>
-              <li>🟢 New lead added</li>
-              <li>📞 Follow-up scheduled today</li>
-              <li>✅ Lead converted successfully</li>
+              <li>  New lead added</li>
+              <li> Follow-up scheduled today</li>
+              <li> Lead converted successfully</li>
             </ul>
             <button className="view-all-btn">View All</button>
           </div>

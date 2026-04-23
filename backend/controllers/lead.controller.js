@@ -6,7 +6,8 @@ exports.createLead = async (req, res) => {
     const client = await pool.connect();
     try{
         await client.query("BEGIN");
-        const created_by = req.user?.user_id || null; // from JWT middleware
+
+        const created_by = req.user?.user_id || null;
         const {
             invoice_no,
             customer_name,
@@ -17,35 +18,36 @@ exports.createLead = async (req, res) => {
             address,
             agent_name,
             agent_contact,
+            agent_email,
             agent_address,
+            agent_bookingRef,
             bank_charge,
             remark,
             grand_total,
             itineraries,
-             currency,
+            currency,
             parent_lead_id = null,
         } = req.body;
 
         const existingInvoice = await client.query(
-            'SELECT invoice_no FROM custleads WHERE invoice_no = $1',[invoice_no] 
+            'SELECT invoice_no FROM custleads WHERE invoice_no = $1', [invoice_no] 
         );
-        if(existingInvoice.rows.length > 0){
-        await client.query("ROLLBACK");
-        return res.status(400).json({
-            message: "Invoice number already exists",
-            error : "DUPLICATE_INVOICE"
-        });
+        if (existingInvoice.rows.length > 0) {
+            await client.query("ROLLBACK");
+            return res.status(400).json({
+                message: "Invoice number already exists",
+                error: "DUPLICATE_INVOICE"
+            });
         }
 
-    // Convert empty strings to null for numeric columns
-    const toNum = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
+        const toNum = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
 
-    const leadResult = await client.query(
-      `INSERT INTO custleads 
-        (invoice_no, customer_name, email, mobile, alternate_contact, contact_person, 
-            address, agent_name, agent_contact, agent_address, grand_total, bank_charge, remark, parent_lead_id, currency, created_by
-            )  
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
+        const leadResult = await client.query(
+            `INSERT INTO custleads 
+            (invoice_no, customer_name, email, mobile, alternate_contact, contact_person, 
+             address, agent_name, agent_contact, agent_email, agent_address, agent_bookingref,
+             grand_total, bank_charge, remark, parent_lead_id, currency, created_by)  
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id`,
             [
                 invoice_no,
                 customer_name,
@@ -56,7 +58,9 @@ exports.createLead = async (req, res) => {
                 address,
                 agent_name,
                 agent_contact,
+                agent_email,
                 agent_address,
+                agent_bookingRef,
                 toNum(grand_total),
                 toNum(bank_charge),
                 remark,
@@ -64,34 +68,45 @@ exports.createLead = async (req, res) => {
                 currency,
                 created_by
             ],
-       );
+        );
 
-    const leadId = leadResult.rows[0].id;
-        for(let i = 0; i < itineraries.length; i++){
-           await client.query(
-             `INSERT INTO lead_itineraries
-        (lead_id, package_type, inclusions,
-         adult_count, child_count, infant_count,
-         adult_total, child_total, infant_total, total)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-        [
-          leadId,
-          itineraries[i].packageType,
-          itineraries[i].inclusion,
-          toNum(itineraries[i].adultCount),
-          toNum(itineraries[i].childCount),
-          toNum(itineraries[i].infantCount),
-          toNum(itineraries[i].adultTotal),
-          toNum(itineraries[i].childTotal),
-          toNum(itineraries[i].infantTotal),
-          toNum(itineraries[i].totalUSD)
-        ]
-           ); 
-    }
-    await client.query("COMMIT");
+        const leadId = leadResult.rows[0].id;
+
+        for (let i = 0; i < itineraries.length; i++) {
+            
+            const adultRemark  = itineraries[i].adultRemarks  ?? itineraries[i].adultRemark  ?? null;
+            const childRemark  = itineraries[i].childRemarks  ?? itineraries[i].childRemark  ?? null;
+            const infantRemark = itineraries[i].infantRemarks ?? itineraries[i].infantRemark ?? null;
+
+            await client.query(
+                `INSERT INTO lead_itineraries
+                (lead_id, package_type, inclusions,
+                 adult_count, child_count, infant_count,
+                 adult_total, child_total, infant_total, total,
+                 adult_remark, child_remark, infant_remark)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+                [
+                    leadId,
+                    itineraries[i].packageType,
+                    itineraries[i].inclusion,
+                    toNum(itineraries[i].adultCount),
+                    toNum(itineraries[i].childCount),
+                    toNum(itineraries[i].infantCount),
+                    toNum(itineraries[i].adultTotal),
+                    toNum(itineraries[i].childTotal),
+                    toNum(itineraries[i].infantTotal),
+                    toNum(itineraries[i].totalUSD),
+                    adultRemark,    
+                    childRemark,   
+                    infantRemark   
+                ]
+            ); 
+        }
+
+        await client.query("COMMIT");
         res.status(201).json({ message: "Lead created successfully", leadId });
-    }
-    catch(err) {
+
+    } catch(err) {
         await client.query("ROLLBACK");
         console.error("Error creating lead:", err);
         res.status(500).json({ 
@@ -101,51 +116,47 @@ exports.createLead = async (req, res) => {
     } finally {
         client.release();
     }
-}
-//check invoic number for duplicates 
+};
+
+// check invoice number for duplicates 
 exports.checkInvoice = async (req, res) => {
     try {
         const { invoiceNo } = req.params;
-        
         const result = await pool.query(
             `SELECT invoice_no FROM custleads WHERE UPPER(invoice_no) = UPPER($1)`,
             [invoiceNo]
         );
-        
-        res.status(200).json({ 
-            exists: result.rows.length > 0 
-        });
+        res.status(200).json({ exists: result.rows.length > 0 });
     } catch (err) {
         console.error("Error checking invoice:", err);
-        res.status(500).json({ 
-            message: "Internal Server Error",
-            error: err.message 
-        });
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
     }
 };
-//get all leads
+
+// get all leads
 exports.getLeadList = async (req, res) => {
     try {
         const requestingUserId = req.user?.user_id;
         const requestingRole   = req.user?.role;
-
-        console.log("getLeadList -> req.user:", req.user); // debug
-
-        const isRestricted = requestingRole === "user";
+        const isRestricted     = requestingRole === "user";
 
         const selectCols = `
-              SELECT
+            SELECT
                 c.id, c.parent_lead_id, c.invoice_no, c.customer_name,
                 c.email, c.mobile, c.alternate_contact, c.contact_person,
-                c.address, c.agent_name, c.agent_contact, c.agent_address,
+                c.address, c.agent_name, c.agent_contact, c.agent_email,
+                c.agent_address, c.agent_bookingref,
                 c.bank_charge, c.remark, c.grand_total AS total_price,
                 c.currency, c.created_at, c.created_by,
                 STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
                 SUM(li.adult_count)  AS total_adults,
                 SUM(li.child_count)  AS total_children,
-                SUM(li.infant_count) AS total_infants
-              FROM custleads c
-              LEFT JOIN lead_itineraries li ON c.id = li.lead_id`;
+                SUM(li.infant_count) AS total_infants,
+                STRING_AGG(COALESCE(li.adult_remark, ''),  ', ') AS adult_remarks,
+                STRING_AGG(COALESCE(li.child_remark, ''),  ', ') AS child_remarks,
+                STRING_AGG(COALESCE(li.infant_remark, ''), ', ') AS infant_remarks
+            FROM custleads c
+            LEFT JOIN lead_itineraries li ON c.id = li.lead_id`;
 
         let result;
         if (isRestricted) {
@@ -167,21 +178,16 @@ exports.getLeadList = async (req, res) => {
     }
 };
 
-
-
-
-// update existing lead
+// update existing lead (creates a new version)
 exports.updateLead = async (req, res) => {
     const client = await pool.connect();
     try {
-         await client.query("BEGIN");
+        await client.query("BEGIN");
         const { id } = req.params;
 
-     
         const existing = await client.query(
             `SELECT * FROM custleads WHERE id = $1`, [id]
         );
-
         if (existing.rows.length === 0) {
             await client.query("ROLLBACK");
             return res.status(404).json({ message: "Lead not found" });
@@ -189,34 +195,30 @@ exports.updateLead = async (req, res) => {
 
         const originalLead = existing.rows[0];
 
-        //  Find latest version (parent + children)
         const latest = await client.query(
-            `
-            SELECT invoice_no 
-            FROM custleads
-            WHERE id = $1 OR parent_lead_id = $1
-            ORDER BY id DESC
-            LIMIT 1
-            `,
+            `SELECT invoice_no 
+             FROM custleads
+             WHERE id = $1 OR parent_lead_id = $1
+             ORDER BY id DESC LIMIT 1`,
             [id]
         );
 
         const latestInvoice = latest.rows[0].invoice_no;
 
-        // Generate next version
         const generateChildInvoice = (parentInvoice) => {
             const versionMatch = parentInvoice.match(/^(.+)-v(\d+)$/);
             if (versionMatch) {
-                const base = versionMatch[1];
+                const base    = versionMatch[1];
                 const version = parseInt(versionMatch[2], 10) + 1;
                 return `${base}-v${version}`;
             }
             return `${parentInvoice}-v2`;
         };
 
-        const newInvoice = generateChildInvoice(latestInvoice);
+        const newInvoice   = generateChildInvoice(latestInvoice);
+        const created_by   = req.user?.user_id || null;
+        const toNum        = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
 
-        const created_by = req.user?.user_id || null; // from JWT middleware
         const {
             customer_name,
             email,
@@ -226,7 +228,9 @@ exports.updateLead = async (req, res) => {
             address,
             agent_name,
             agent_contact,
+            agent_email,
             agent_address,
+            agent_bookingRef: agent_bookingref,
             bank_charge,
             remark,
             grand_total,
@@ -234,15 +238,13 @@ exports.updateLead = async (req, res) => {
             currency,
         } = req.body;
 
-        const toNum = (val) => (val === "" || val === null || val === undefined) ? null : Number(val);
-
-        //Insert NEW lead (child)
         const leadResult = await client.query(
             `INSERT INTO custleads
             (invoice_no, customer_name, email, mobile, alternate_contact,
-             contact_person, address, agent_name, agent_contact,
-             agent_address, grand_total, bank_charge, remark, parent_lead_id, currency, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
+             contact_person, address, agent_name, agent_contact, agent_email,
+             agent_address, agent_bookingref, grand_total, bank_charge, remark,
+             parent_lead_id, currency, created_by)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id`,
             [
                 newInvoice,
                 customer_name,
@@ -253,7 +255,9 @@ exports.updateLead = async (req, res) => {
                 address,
                 agent_name,
                 agent_contact,
+                agent_email,
                 agent_address,
+                agent_bookingref,
                 toNum(grand_total),
                 toNum(bank_charge),
                 remark,
@@ -265,14 +269,19 @@ exports.updateLead = async (req, res) => {
 
         const newLeadId = leadResult.rows[0].id;
 
-        // Insert itineraries
         for (let i = 0; i < itineraries.length; i++) {
+           
+            const adultRemark  = itineraries[i].adultRemarks  ?? itineraries[i].adultRemark  ?? null;
+            const childRemark  = itineraries[i].childRemarks  ?? itineraries[i].childRemark  ?? null;
+            const infantRemark = itineraries[i].infantRemarks ?? itineraries[i].infantRemark ?? null;
+
             await client.query(
                 `INSERT INTO lead_itineraries
                 (lead_id, package_type, inclusions,
                  adult_count, child_count, infant_count,
-                 adult_total, child_total, infant_total, total)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                 adult_total, child_total, infant_total, total,
+                 adult_remark, child_remark, infant_remark)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
                 [
                     newLeadId,
                     itineraries[i].packageType,
@@ -284,12 +293,14 @@ exports.updateLead = async (req, res) => {
                     toNum(itineraries[i].childTotal),
                     toNum(itineraries[i].infantTotal),
                     toNum(itineraries[i].totalUSD),
+                    adultRemark,    
+                    childRemark,    
+                    infantRemark    
                 ]
             );
         }
 
         await client.query("COMMIT");
-
         res.status(201).json({
             message: "New lead version created successfully",
             newLeadId,
@@ -299,15 +310,11 @@ exports.updateLead = async (req, res) => {
     } catch (err) {
         await client.query("ROLLBACK");
         console.error("Error creating new lead version:", err);
-        res.status(500).json({
-            message: "Internal Server Error",
-            error: err.message
-        });
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
     } finally {
         client.release();
     }
 };
-
 
 exports.getInvoice = async (req, res) => {
     try {
@@ -326,8 +333,10 @@ exports.getInvoice = async (req, res) => {
         );
 
         res.status(200).json({
-             lead: leadResult.rows[0],
-              itineraries: itinerariesResult.rows });
+            lead: leadResult.rows[0],
+            mydata:1,
+            itineraries: itinerariesResult.rows
+        });
     } catch (err) {
         console.error("Error fetching invoice details:", err);
         res.status(500).json({ message: "Internal Server Error", error: err.message });
@@ -335,55 +344,39 @@ exports.getInvoice = async (req, res) => {
 };
 
 exports.getLeadById = async (req, res) => {
-  try {
-    const leadId = req.params.id;
+    try {
+        const leadId = req.params.id;
 
-    const result = await pool.query(
-      `
-      SELECT
-        c.id,
-        c.parent_lead_id,
-        c.invoice_no,
-        c.customer_name,
-        c.email,
-        c.mobile,
-        c.alternate_contact,
-        c.contact_person,
-        c.address,
-        c.agent_name,
-        c.agent_contact,
-        c.agent_address,
-        c.bank_charge,
-        c.remark,
-        c.grand_total AS total_price,
-        c.adult,
-        c.child,
-        c.infant,
-        c.created_at,
-        STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
-        COALESCE(SUM(li.adult_count), 0)  AS total_adults,
-        COALESCE(SUM(li.child_count), 0)  AS total_children,
-        COALESCE(SUM(li.infant_count), 0) AS total_infants
-      FROM custleads c
-      LEFT JOIN lead_itineraries li ON c.id = li.lead_id
-      WHERE c.id = $1
-      GROUP BY c.id
-      `,
-      [leadId]
-    );
+        const result = await pool.query(
+            `SELECT
+                c.id, c.parent_lead_id, c.invoice_no, c.customer_name,
+                c.email, c.mobile, c.alternate_contact, c.contact_person,
+                c.address, c.agent_name, c.agent_contact, c.agent_email,
+                c.agent_address, c.agent_bookingref,
+                c.bank_charge, c.remark, c.grand_total AS total_price,
+                c.adult, c.child, c.infant, c.created_at,
+                STRING_AGG(DISTINCT li.package_type, ', ') AS package_types,
+                COALESCE(SUM(li.adult_count),  0) AS total_adults,
+                COALESCE(SUM(li.child_count),  0) AS total_children,
+                COALESCE(SUM(li.infant_count), 0) AS total_infants,
+                STRING_AGG(COALESCE(li.adult_remark, ''),  ', ') AS adult_remarks,
+                STRING_AGG(COALESCE(li.child_remark, ''),  ', ') AS child_remarks,
+                STRING_AGG(COALESCE(li.infant_remark, ''), ', ') AS infant_remarks
+            FROM custleads c
+            LEFT JOIN lead_itineraries li ON c.id = li.lead_id
+            WHERE c.id = $1
+            GROUP BY c.id`,
+            [leadId]
+        );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Lead not found" });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Lead not found" });
+        }
+
+        res.status(200).json(result.rows[0]);
+
+    } catch (err) {
+        console.error("Error fetching lead:", err);
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
     }
-
-    res.status(200).json(result.rows[0]);
-
-  } catch (err) {
-    console.error("Error fetching lead:", err);
-
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: err.message,
-    });
-  }
 };

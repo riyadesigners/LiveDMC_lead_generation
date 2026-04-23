@@ -86,7 +86,7 @@ const RecentRow = ({ lead, index, navigate }) => {
     </tr>
   );
 };
-
+ 
  
 const Dashboard = () => {
   const [leads, setLeads]     = useState([]);
@@ -101,7 +101,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const res = await api.get("/riya_dmclead/getLeadList");
+        const res = await api.get("/getLeadList");
         setLeads(res.data);
       } catch (err) {
         console.error("Failed to fetch leads", err);

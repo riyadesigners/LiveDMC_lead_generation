@@ -1,12 +1,13 @@
 const express = require('express');
 const app = express();
-const cors = require ('cors');
+const cors = require('cors');
 
- 
+
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'http://localhost:8081'
+  'http://localhost:8081',
+  'https://sso.riya.travel'
 ];
 
 
@@ -19,7 +20,8 @@ app.use(cors({
   },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type'],
-  credentials: true,   // ✅ required for cookies
+  credentials: true,
+  exposedHeaders: ['set-cookie'],     
 }));
 
 app.use(express.json());
