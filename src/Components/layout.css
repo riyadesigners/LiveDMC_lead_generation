@@ -180,7 +180,7 @@ body { margin: 0; padding: 0; font-size: 14px !important; }
 }
 
 .sidebar__link:hover  { background: #f9fdff; color: var(--color-secondary); }
-.sidebar__link.active { background: #f9fdff; color: var(--color-secondary); }
+.sidebar__link.active { background: #f9fdff; color: var(--color-secondary); font-weight: 600; }
 
 .sidebar .icon { font-size: 18px; min-width: 24px; text-align: center; }
 

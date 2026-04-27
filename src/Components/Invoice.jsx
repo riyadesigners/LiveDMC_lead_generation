@@ -230,7 +230,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
         <div className="details-section">
           <div className="business-details">
             <h4>BUSINESS DETAILS</h4>
-            <h3>RIYA TOURS & TRAVEL </h3>
+            <h3>RIYA TRAVEL </h3>
             <p>24th Floor, 160/561 ITF SILOM PALACE, SILOM ROAD,</p>
             <p>SURIYAWONG, BANG RAK, BANGKOK 10500, THAILAND</p>
             <div className="tax-info">
@@ -497,7 +497,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
                 {numberToWords(Number(convertAmount(Number(lead.grand_total) + Number(lead.bank_charge || 0))), getCurrencyName())}
               </div>
               <div className="payment-info">
-                Name dynamically as per total - Riya Travel Invoice for travel services to customer
+                This amount is calculated dynamically based on the selected travel services in the Riya Travel proforma invoice. 
               </div>
             </div>
           </div>
@@ -506,13 +506,13 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
         {/* Footer Note */}
         <div className="invoice-footer-note">
           <i className="fas fa-info-circle"></i>
-          This is a computer generated invoice and does not require a signature.
+          This is a computer generated proforma invoice and does not require a signature.
         </div>
 
         {/* Copyright */}
-        <div className="invoice-copyright">
-           © {new Date().getFullYear()} Riya Travel & Tours Co Ltd. All rights reserved.
-        </div>
+        {/* <div className="invoice-copyright">
+           © {new Date().getFullYear()} Riya Travel. All rights reserved.
+        </div> */}
       </div>
     </div>
   )

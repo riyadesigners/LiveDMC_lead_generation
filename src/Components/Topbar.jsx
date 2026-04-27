@@ -1,5 +1,5 @@
 import React, { useState , useEffect, useRef} from 'react'
-
+import Riyalogo from '../assets/logo.png'
 
 const Topbar = ({ onToggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -36,7 +36,7 @@ const Topbar = ({ onToggleSidebar }) => {
         <button className="topbar-toggle" onClick={onToggleSidebar}>
           <i className="fas fa-bars"></i>
         </button>
-        <span className="topbar-title">My Dashboard</span>
+        <img src={Riyalogo} alt="Riya Travel" className='img-fluid' style={{ maxHeight: '60px' }}  /> <span className="topbar-title">DMC Thailand</span>
       </div>
 
       <div className="topbar-right" ref={notificationRef}>

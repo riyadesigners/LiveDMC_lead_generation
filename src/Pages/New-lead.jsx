@@ -519,7 +519,7 @@ useEffect(() => {
               <h3 className="section-title mt-3">Agent Information</h3>
               <div className="form-grid three">
                 <div className="form-group">
-                  <label>Agent Name</label>
+                  <label>Agent Name *</label>
                   <input
                     className="form-control modern-input"
                     placeholder="Enter Agent Name"
@@ -529,7 +529,7 @@ useEffect(() => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Agent Contact No</label>
+                  <label>Agent Contact No *</label>
                   <input
                     className="form-control modern-input"
                     placeholder="Enter Agent Contact No"
@@ -539,7 +539,7 @@ useEffect(() => {
                   />
                 </div>
                   <div className="form-group">
-                  <label>Agent Email Address </label>
+                  <label>Agent Email Address * </label>
                   <input
                     placeholder="Enter Agent Email Address"
                     className="form-control modern-input"

@@ -561,6 +561,37 @@ h2.react-datepicker__current-month { display: none !important; }
 .note{
   width:65%;
 }
+.lead-card {
+padding:18px 18px
+}
+
+.lead-table td{
+    font-size: 12px;
+    padding: 7px;
+}
+
+.lead-table th{
+    padding: 10px;
+}
+
+.sidebar__link {
+    font-size: 13px;
+}
+.sidebar{
+    width:195px;
+}
+.sidebar--collapsed {
+    width: 64px;
+}
+.stat-label {
+  font-size: 9px;
+}
+.stat-value{
+  font-size: 24px;
+}
+.stat-sub{
+  font-size: 11px;
+}
 }
 
 

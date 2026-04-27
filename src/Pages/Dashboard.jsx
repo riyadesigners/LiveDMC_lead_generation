@@ -116,10 +116,19 @@ const Dashboard = () => {
   const parents      = leads.filter(l => !l.parent_lead_id);
   const totalLeads   = parents.length;
   const countOf      = (s) => parents.filter(l => l.status === s).length;
-  const totalRevenue = leads.reduce((sum, l) => sum + Number(l.total_price || 0), 0);
-  const totalPax     = leads.reduce((sum, l) =>
-    sum + (Number(l.total_adults) || 0) + (Number(l.total_children) || 0) + (Number(l.total_infants) || 0), 0
-  );
+  const totalRevenue = parents.reduce(
+  (sum, l) => sum + Number(l.total_price || 0),
+  0
+);
+
+const totalPax = parents.reduce(
+  (sum, l) =>
+    sum +
+    (Number(l.total_adults) || 0) +
+    (Number(l.total_children) || 0) +
+    (Number(l.total_infants) || 0),
+  0
+);
 
   /* top agents */
   const agentMap = {};
@@ -131,7 +140,7 @@ const Dashboard = () => {
 
   /* package breakdown */
   const pkgMap = {};
-  leads.forEach(l => {
+  parents.forEach(l => {
     if (l.package_types) {
       l.package_types.split(", ").forEach(p => {
         pkgMap[p.trim()] = (pkgMap[p.trim()] || 0) + 1;
@@ -201,7 +210,7 @@ const Dashboard = () => {
         <StatCard label="In Progress"   value={countOf("IN_PROGRESS")}              icon="⚙️" accent={C.progress}  sub="being worked on"     barValue={countOf("IN_PROGRESS")} barMax={totalLeads || 1} />
         <StatCard label="Converted"     value={countOf("CONVERTED")}                icon="✅" accent={C.converted} sub="closed & won"        barValue={countOf("CONVERTED")}   barMax={totalLeads || 1} />
         <StatCard label="Discarded"     value={countOf("DISCARDED")}                icon="🗑️" accent={C.discarded} sub="closed / lost"       barValue={countOf("DISCARDED")}   barMax={totalLeads || 1} />
-        {!isUser && (<StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="💰" accent={C.revenue}  sub="across all versions" />)}
+        {!isUser && (<StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="💰" accent={C.revenue}  sub="latest proformas only" />)}
         <StatCard label="Total Pax"     value={totalPax.toLocaleString()}           icon="👥" accent={C.pax}      sub="adults + children + infants" />
       </div>
 
