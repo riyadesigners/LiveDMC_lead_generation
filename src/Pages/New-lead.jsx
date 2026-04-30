@@ -5,6 +5,58 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate, useParams } from "react-router-dom";   
 import api from "../api/axiosInstance";
 
+
+function PassengerCounter({ label, value, setValue }) {
+  const [inputVal, setInputVal] = React.useState(String(value));
+
+  // Keep local state in sync if parent changes value externally (e.g. +/- buttons)
+  React.useEffect(() => {
+    setInputVal(String(value));
+  }, [value]);
+
+  const handleChange = (e) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    setInputVal(raw);  
+    setValue(raw === "" ? 0 : Number(raw)); 
+  };
+
+  const handleBlur = () => {
+   
+    if (inputVal === "" || inputVal === undefined) {
+      setInputVal("0");
+      setValue(0);
+    }
+  };
+
+  return (
+    <div className="counter d-flex align-items-center gap-2">
+      <span style={{ minWidth: "60px" }}>{label}</span>
+
+      <button
+        type="button"
+        onClick={() => setValue(Math.max(0, value - 1))}
+      >
+        -
+      </button>
+
+      <input
+        type="text"
+        className="form-control text-center"
+        value={inputVal}             // ← use local string state
+        onChange={handleChange}
+        onBlur={handleBlur}          // ← normalize on blur
+        style={{ width: "60px", padding: "2px 12px" }}
+      />
+
+      <button
+        type="button"
+        onClick={() => setValue(value + 1)}
+      >
+        +
+      </button>
+    </div>
+  );
+}
 const LeadForm = () => {
   // id      = version-mode (/new-lead/:id)  — creates a child lead
   // editId  = edit-mode   (/edit-lead/:editId) — updates existing lead
@@ -364,22 +416,22 @@ useEffect(() => {
     }
   };
 
-  function PassengerCounter({ label, value, setValue }) {
-    return (
-      <div className="counter   modern-input">
-        <span>{label}</span>
-        {/* <span style={{width:'60%'}}> */}
-        <button type="button" onClick={() => setValue(Math.max(0, value - 1))}>
-          -
-        </button>
-        <span className="count">{value}</span>
-        <button type="button" onClick={() => setValue(value + 1)}>
-          +
-        </button>
-        {/* </span> */}
-      </div>
-    );
-  }
+  // function PassengerCounter({ label, value, setValue }) {
+  //   return (
+  //     <div className="counter   modern-input">
+  //       <span>{label}</span>
+  //       {/* <span style={{width:'60%'}}> */}
+  //       <button type="button" onClick={() => setValue(Math.max(0, value - 1))}>
+  //         -
+  //       </button>
+  //       <span className="count">{value}</span>
+  //       <button type="button" onClick={() => setValue(value + 1)}>
+  //         +
+  //       </button>
+  //       {/* </span> */}
+  //     </div>
+  //   );
+  // }
 
   const grandTotalUSD = itineraries.reduce(
   (sum, item) => sum + Number(item.totalUSD || 0),

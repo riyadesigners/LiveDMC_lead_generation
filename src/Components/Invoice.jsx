@@ -230,7 +230,7 @@ const convertAmount     = (amount) => parseFloat(amount || 0).toFixed(2);
         <div className="details-section">
           <div className="business-details">
             <h4>BUSINESS DETAILS</h4>
-            <h3>RIYA TRAVEL </h3>
+            <h3>RIYA TRAVEL & TOURS CO LTD </h3>
             <p>24th Floor, 160/561 ITF SILOM PALACE, SILOM ROAD,</p>
             <p>SURIYAWONG, BANG RAK, BANGKOK 10500, THAILAND</p>
             <div className="tax-info">
